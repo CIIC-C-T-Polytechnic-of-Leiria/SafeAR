@@ -1,22 +1,26 @@
-## SafeAR —  supporting privacy and confidentiality in Augmented Reality contexts
+## <p><img src="assets\safear_ipl_icon.png" width="80" align="middle">   Supporting privacy and confidentiality in Augmented Reality contexts</p>
+<!-- ### Description -->
 
-### Description
+### Architecture
 
 <p align="center">
 <img src="assets/safeAR_layer_v0.png" width="700px"/>
 </p>
 
 
-
 [//]: <> (### License )
 
 ### Overleaf with notes
 
-[Overleaf](https://www.overleaf.com/4431479233xhqwswqnyzcg#62d120)
+[SafeAR notes](https://www.overleaf.com/4431479233xhqwswqnyzcg#62d120)
 
-### Contact
+### PowerPoint
 
-If you have any questions, suggestions or want to contribute, feel free to contact me at <code>tiago.r.ribeiro@gmail.com</code>.
+[18/10/2023 meeting PowerPoint - Protection Layer](https://myipleiria.sharepoint.com/:p:/r/sites/SafeAR/Shared%20Documents/General/Reuniao_SafeAR_18_10.pptx?d=w8587b7f6e4d94049a08dc22a5a615661&csf=1&web=1&e=oHyBq4)
+
+<!-- ### Contact
+
+If you have any questions, suggestions or want to contribute, feel free to contact me at <code>tiago.r.ribeiro@gmail.com</code>. -->
 
 <hr style="height:0.2px;border-width:0;color:#d3d3d3;background-color:#d3d3d3">
 <p align="center" style="margin: 0; padding: 0;">
