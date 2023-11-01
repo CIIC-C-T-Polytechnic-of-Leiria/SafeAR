@@ -1,6 +1,6 @@
 
 
-<img align="left" width="80" height="80" src="assets\safeAR_ipl_icon.png">
+<img align="left" width="100" height="100" src="assets\safeAR_ipl_icon.png">
 
 # Supporting privacy and confidentiality in AR contexts
 
@@ -26,8 +26,7 @@
 
 If you have any questions, suggestions or want to contribute, feel free to contact me at <code>tiago.r.ribeiro@gmail.com</code>. -->
 
-<hr style="height:0.2px;border-width:0;color:#d3d3d3;background-color:#d3d3d3">
+
 <p align="center" style="margin: 0; padding: 0;">
 <img src="assets/CIIC_logo_v2.png" width="800px" style="display: block; margin: 0; padding: 0;"/>
 </p>
-<hr style="height:0.2px;border-width:0;color:#d3d3d3;background-color:#d3d3d3">
