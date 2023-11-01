@@ -2,4 +2,5 @@
 test_data
 datasets
 
-yolov5\README.md
+# ignore README.md from yolov5 folder
+yolov5/README.md
