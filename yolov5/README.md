@@ -1,10 +1,17 @@
-## YOLOv5 with Obfuscation
-This repository is a modified version of the original YOLOv5 repository. It includes additional functionality for obfuscating certain classes of objects in images or videos.
+# YOLOv5 with Obfuscation 🕵️‍♂️🔒
 
-## Modified Files
+(*Privacy, Confidentiality and other Ethical implications of image/video obfuscation*)
+
+This repository is a modified version of the Ultralytics YOLOv5 repository. It includes additional functionality for obfuscating certain classes of objects in images or videos.
+
+## Visual Examples and Videos 📷
+
+(*Before and after obfuscation*)
+
+## Modified Files 📂
 The following files in the YOLOv5 repository have been modified to support obfuscation:
 
-```
+```plaintext
 yolov5
 ├── segment
 │   ├── predict.py (this file was changed/adpated to support obsfucation)
@@ -12,7 +19,9 @@ yolov5
 └── ...
 
 ```
-## Usage (not tested on a different machine yet...) 
+## Dependencies 📦
+
+## Usage (not tested on a different machine yet...) 📋
 
 To use this repository, you must first clone it using the following command 
 ```bash
@@ -30,11 +39,11 @@ You can run the obfuscation using the `predict.py` script in the segment directo
 `--weights`: Path to the weights file for the model.  
 `--source`: Path to the input data (image or video).  
 `--view-img`: Include this flag to display the image/video window during inference.  
-`--classes`: List of class (number `0` to `79`) indices to detect and obfuscate (see this [file](data/coco128-seg.yaml)).  
+`--classes`: List of class (number `0` to `79`) indices to detect and obfuscate (refer to this [file](data/coco128-seg.yaml)).  
 `--policy`: Obfuscation policy (`'mask'`, `'blur'`, or `'pixelate'`) to apply to the detected objects. 
 
  
-## Example
+## Example of usage 🚀
 Here's an example command that runs the `'mask'` obfuscation policy on class `0` (i.e., "person" class) in the video "path/to/video.mp4:
 
 
