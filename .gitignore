@@ -1,3 +1,6 @@
 # ignore folder test_data
 test_data
 datasets
+
+# ignore README.md from yolov5 folder
+yolov5/README_yolov5.md
