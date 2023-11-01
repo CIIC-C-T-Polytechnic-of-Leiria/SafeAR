@@ -17,7 +17,7 @@ yolov5
 To use this repository, you must first clone it using the following command 
 ```bash
 git clone https://github.com/CIIC-C-T-Polytechnic-of-Leiria/SafeAR
-``
+```
 
 To use this repository, you must first install the dependencies listed in the `requirements.txt` file. You can do this by running the following command:
 
