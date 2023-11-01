@@ -1,6 +1,6 @@
 
 
-<img align="left" width="80" height="80" src="assets/safear_ipl_icon.png">
+<img align="left" width="80" height="80" src="assets/safeAR_ipl_icon.png">
 
 # Supporting privacy and confidentiality in AR contexts
 
