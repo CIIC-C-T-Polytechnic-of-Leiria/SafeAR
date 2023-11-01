@@ -18,7 +18,7 @@ You can run the obfuscation using the `predict.py` script in the segment directo
 `--weights`: Path to the weights file for the model.  
 `--source`: Path to the input data (image or video).  
 `--view-img`: Include this flag to display the image/video window during inference.  
-`--classes`: List of class (number `0` to `79`) indices to detect and obfuscate (see this [file](yolov5\data\coco128-seg.yaml)).  
+`--classes`: List of class (number `0` to `79`) indices to detect and obfuscate (see this [file](data/coco128-seg.yaml)).  
 `--policy`: Obfuscation policy (`'mask'`, `'blur'`, or `'pixelate'`) to apply to the detected objects. 
 
  
