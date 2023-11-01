@@ -1,4 +1,4 @@
-<p><img src="assets\safear_ipl_icon.png" width="80" align="middle"><h1>  Supporting privacy and confidentiality in Augmented Reality contexts </h1></p>
+<p><img src="assets/safear_ipl_icon.png" width="80" align="middle"><h1>  Supporting privacy and confidentiality in Augmented Reality contexts </h1></p>
 <!-- ### Description -->
 
 ### Architecture
