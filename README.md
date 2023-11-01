@@ -5,7 +5,7 @@
 # Supporting privacy and confidentiality in AR contexts
 
 
-### Architecture
+### Architecture (v0.1)
 
 <p align="center">
 <img src="assets/safeAR_layer_v0.png" width="700px"/>
@@ -14,13 +14,13 @@
 
 [//]: <> (### License )
 
-### Overleaf with notes
+### Overleaf with notes related to the project
 
 [SafeAR notes](https://www.overleaf.com/4431479233xhqwswqnyzcg#62d120)
 
-### PowerPoint
+### Presentations
 
-[18/10/2023 meeting PowerPoint - Protection Layer](https://myipleiria.sharepoint.com/:p:/r/sites/SafeAR/Shared%20Documents/General/Reuniao_SafeAR_18_10.pptx?d=w8587b7f6e4d94049a08dc22a5a615661&csf=1&web=1&e=oHyBq4)
+[18/10/2023 meeting PowerPoint - Protection Layer Architecture](https://myipleiria.sharepoint.com/:p:/r/sites/SafeAR/Shared%20Documents/General/Reuniao_SafeAR_18_10.pptx?d=w8587b7f6e4d94049a08dc22a5a615661&csf=1&web=1&e=oHyBq4)
 
 <!-- ### Contact
 
