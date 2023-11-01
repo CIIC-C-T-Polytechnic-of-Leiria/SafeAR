@@ -1,6 +1,5 @@
 ## SafeAR —  supporting privacy and confidentiality in Augmented Reality contexts
 
-
 ### Description
 
 <p align="center">
@@ -11,7 +10,9 @@
 
 [//]: <> (### License )
 
+### Overleaf with notes
 
+[Overleaf](https://www.overleaf.com/4431479233xhqwswqnyzcg#62d120)
 
 ### Contact
 
