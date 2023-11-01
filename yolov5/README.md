@@ -12,7 +12,19 @@ yolov5
 └── ...
 
 ```
-## Usage
+## Usage (not tested on a different machine yet...) 
+
+To use this repository, you must first clone it using the following command 
+```bash
+git clone https://github.com/CIIC-C-T-Polytechnic-of-Leiria/SafeAR
+``
+
+To use this repository, you must first install the dependencies listed in the `requirements.txt` file. You can do this by running the following command:
+
+```bash
+pip install -r requirements.txt
+```
+
 You can run the obfuscation using the `predict.py` script in the segment directory. The script takes several command-line arguments:
 
 `--weights`: Path to the weights file for the model.  
