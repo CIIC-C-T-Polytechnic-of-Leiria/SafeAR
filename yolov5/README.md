@@ -1,26 +1,3 @@
-<!-- Print folder tree path in markdown to get to segment folder and safe_layer.py  from yolov5 folder, with | and _ to draw the tree -->
-
-
-## Edited files from YOLOv5 repository
-
-
-
-### How to use
-
-<!-- python segment/predict.py --weights yolov5n-seg.pt --source ../test_data/warehouse_video.mp4 --view-img --nosave --classes 0 --policy "mask" -->
-<!-- Explain policy options, classes, etc -->
-<!-- Explain how to use the safe_layer.py functions -->
-
-The `--policy` option in the command is used to specify the obfuscation method that should be applied to the detected objects in the image or video. Here are the options:
-
-
-
-Example of command to run the obsfucation policy "mask" on the class 0 (person) of the video "warehouse_video.mp4" and visualize the results:
-
-```python
-python segment/predict.py --weights yolov5n-seg.pt --source ../test_data/warehouse_video.mp4 --view-img --nosave --classes 0 --policy "mask"
-```
-
 ## YOLOv5 with Obfuscation
 This repository is a modified version of the original YOLOv5 repository. It includes additional functionality for obfuscating certain classes of objects in images or videos.
 
