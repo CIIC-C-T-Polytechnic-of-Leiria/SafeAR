@@ -23,7 +23,7 @@ You can run the obfuscation using the `predict.py` script in the segment directo
 
  
 ## Example
-Here's an example command that runs the `'mask'` obfuscation policy on class `0`` (i.e., "person" class) in the video "path/to/video.mp4:
+Here's an example command that runs the `'mask'` obfuscation policy on class `0` (i.e., "person" class) in the video "path/to/video.mp4:
 
 
 ```bash
