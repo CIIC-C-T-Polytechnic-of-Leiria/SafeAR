@@ -16,8 +16,6 @@ This repository is a modified version of the [Ultralytics YOLOv5 repository](htt
 <details>
 <summary><h2>Possible Attacks! 🤔 </h2></summary>
 
-
-
 #### White Box Attacks:
 - [ ] [FGSM - Fast Gradient Sign Method](https://www.tensorflow.org/tutorials/generative/adversarial_fgsm?hl=pt-br)
 - [ ] [Certified Radius-Guided Attack](https://arxiv.org/abs/2304.02693)

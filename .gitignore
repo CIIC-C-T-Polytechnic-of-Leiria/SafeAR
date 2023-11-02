@@ -1,6 +1,7 @@
 # ignore folder test_data
 test_data
 datasets
+keras_core/data_voc2007
 
 # ignore README.md from yolov5 folder
 yolov5/README_yolov5.md
