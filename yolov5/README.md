@@ -102,5 +102,7 @@ Here's an example command that runs the `'mask'` obfuscation policy on class `0`
 
 ```bash
 python segment/predict.py --weights yolov5n-seg.pt --source path/to/video.mp4 --view-img --classes 0 --policy "mask"
+
+python segment/predict.py --weights yolov5n-seg.pt --source 1 --view-img --classes 0 --policy "mask"
 ```
 This command will display the video with the specified obfuscation applied.

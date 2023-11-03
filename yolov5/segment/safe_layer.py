@@ -318,11 +318,13 @@ class Annotator:
             im_gpu_np = (im_gpu.cpu().numpy() * 255).astype(np.uint8)
             mask_np = mask_expanded.cpu().numpy()
 
-            # Create a blur kernel
-            kernel_size = (13, 13)
+            # Create a blur kernel (needs to be an ODD size)
+            # kernel_size = (41, 41)
 
             # Blur the entire image using GaussianBlur
-            blurred = cv2.GaussianBlur(im_gpu_np, kernel_size, 0)
+            #blurred = cv2.GaussianBlur(im_gpu_np, kernel_size, 0)
+            # blurred = cv2.boxFilter(im_gpu_np, -1, (kernel_size[0] // 2, kernel_size[1] // 2))
+            blurred = cv2.medianBlur(im_gpu_np, ksize=51) # ksize must be odd   
             
             # Create inverse mask
             mask_inv = 1 - mask_np
@@ -345,7 +347,7 @@ class Annotator:
             # pixelated = cv2.resize(small, (im_gpu_np.shape[1], im_gpu_np.shape[0]), interpolation=cv2.INTER_NEAREST)
 
             # Downscale the image to 1/4 size
-            pixelated = cv2.resize(im_gpu_np, (0, 0), fx=0.25, fy=0.25, interpolation=cv2.INTER_NEAREST)
+            pixelated = cv2.resize(im_gpu_np, (0, 0), fx=0.05, fy=0.05, interpolation=cv2.INTER_NEAREST)
             # Upscale the image back to original size  
             pixelated = cv2.resize(pixelated, (im_gpu_np.shape[1], im_gpu_np.shape[0]), interpolation=cv2.INTER_NEAREST)
 
