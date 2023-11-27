@@ -8,7 +8,7 @@ This repository is a modified version of the [Ultralytics YOLOv5 repository](htt
 
 ## To Do List 📝
 - [x] Implement obfuscation functionality with different policies (masking, blur, pixelation) 
-- [ ] Implement diferent obfuscation policies to different classes
+- [x] Implement different obfuscation policies for different classes
 - [ ] Measure segmentation accuracy and inferencing time
 - [ ] Evaluate performance under adversarial attacks
 - [ ] Implement a GUI to select the obfuscation policy and classes to obfuscate?
