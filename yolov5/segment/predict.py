@@ -193,9 +193,9 @@ def run(
                     n = (det[:, 5] == c).sum()  # detections per class
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Segmentation masks policy "mask", "blur" or "pixalate"
+                # Segmentation masks policy "mask", "blur" or "pixelate"
                 annotator.masks(
-                    masks = masks,
+                    masks=masks,
                     policy=policy,
                     im_gpu=torch.as_tensor(im0, dtype=torch.float16).to(device).permute(2, 0, 1).flip(0).contiguous() /
                     255 if retina_masks else im[i])

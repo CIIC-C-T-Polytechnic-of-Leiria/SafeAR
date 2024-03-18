@@ -1,7 +1,5 @@
 # YOLOv5 with Obfuscation 🕵️‍♂️🔒
 
-
-
 (*Privacy, Confidentiality and other Ethical implications of image/video obfuscation*)
 
 This repository is a modified version of the [Ultralytics YOLOv5 repository](https://github.com/ultralytics/yolov5). It includes additional functionality for obfuscating certain classes of objects in images or videos.

@@ -5,5 +5,9 @@ keras_core/data_voc2007
 
 # ignore README.md from yolov5 folder
 yolov5/README_yolov5.md
+runs/
 
 yolov5/.github/
+
+# ignore playground folder
+playground
