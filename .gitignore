@@ -9,5 +9,6 @@ runs/
 
 yolov5/.github/
 
-# ignore playground folder
+# folders to ignore
 playground
+.vscode
