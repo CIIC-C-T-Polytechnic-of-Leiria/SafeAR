@@ -67,7 +67,7 @@ Install the required packages:
 ```
 pip install -r requirements.txt
 ```
-*Note*: SafeAR SaaS was tested using Python 3.10.12.
+*Note*: SafeAR aaS was tested using Python 3.10.12 environment.
 
 
 Model Download and Conversion
@@ -90,13 +90,20 @@ The API can be used both as a command-line tool and as a Python library.
 ### Command-Line Usage
 
 To use the API as a command-line tool, run the following command:
-```css
-python main.py --model_number MODEL_NUMBER --class_id_list CLASS_ID_1 CLASS_ID_2 ... --obfuscation_type_list OBFS_TYPE_1 OBFS_TYPE_2 ... --img_source IMG_SOURCE --show_fps
+```bash
+python main.py 
+    --model_number MODEL_NUMBER 
+    --class_id_list CLASS_ID_1 CLASS_ID_2 ... 
+    --obfuscation_type_list OBFS_TYPE_1 OBFS_TYPE_2 ... 
+    --img_source IMG_SOURCE 
+    --show_fps
+    --show_boxes
+    --save_video
 ```
 where:
 
 * `MODEL_NUMBER` is the number of the model to use (0-based index).
-* `CLASS_ID_1 CLASS_ID_2 ...` is a list of class IDs to obfuscate, according to the model's classes.
+* `CLASS_ID_1 CLASS_ID_2 ...` is a list of class IDs to obfuscate. If model is trained in COCO dataset, see the mapping [here](
 * `OBFS_TYPE_1 OBFS_TYPE_2 ...` available obfuscation types are `bluring`, `masking`, and `pixelation`.
 * `IMG_SOURCE` is the source of the images to process. This can be a file path, a URL, or a camera index.
 * `--show_fps` is an optional flag to show the frames per second.
@@ -105,7 +112,11 @@ where:
 
 For example:
 ```bash
-python main.py --model_number 0 --class_id_list 0 1 2 --obfuscation_type_list bluring masking pixelation --img_source 0 --show_fps
+python main.py 
+    --model_number 0 
+    --class_id_list 0 1 2 
+    --obfuscation_type_list bluring masking pixelation 
+    --img_source 0 --show_fps
 ```
 This will use the first available model to obfuscate objects with class IDs 0, 1, and 2 in the video stream from the default camera, using the `bluring`, `masking`, and `pixelation` obfuscation types, and showing the frames per second on the screen.
 
