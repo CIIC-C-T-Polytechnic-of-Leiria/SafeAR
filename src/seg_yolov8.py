@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import onnxruntime as ort
+import onnxruntime as ort  # If possible, use onnxruntime-gpu!
 from typing import Tuple
 
 
@@ -59,8 +59,8 @@ class Yolov8Seg:
         # img = np.transpose(img, (1, 2, 0)) * 255
         # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # cv2.imwrite("test_samples/preprocess_image.png", img)
-
         # print(f"Preprocessed image shape: {image.shape}")  # (1, 3, 640, 640)
+        
         preds = self.session.run(None, {self.session.get_inputs()[0].name: image})
         return self.postprocess(
             preds,
@@ -141,7 +141,6 @@ class Yolov8Seg:
             # print(
             #     f"model_output_width: {self.model_output_width}, model_output_height: {self.model_output_height}"
             # )
-
             # print(f"box_coord[..., :4]: {instnc_prds[..., :4]}")
             # print(f"protos.shape: {protos.shape}")  # (1, 32, 160, 160)
 

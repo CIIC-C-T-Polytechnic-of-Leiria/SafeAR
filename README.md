@@ -30,7 +30,7 @@ In development...
 
 
 | Model | Size (MB) | Training Data | Classes | Inference Time CPU (ms)\* | Inference Time GPU (ms)\* |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- |
 | YOLOv5n-seg | - | COCO 2017 | 80 | - | - |
 | YOLOv8n-seg | - | COCO 2017 | 80 | - | - |
 
@@ -67,7 +67,7 @@ Install the required packages:
 ```
 pip install -r requirements.txt
 ```
-Note: SafeAR SaaS was tested using Python 3.10.12.
+*Note*: SafeAR SaaS was tested using Python 3.10.12.
 
 
 Model Download and Conversion
@@ -80,7 +80,7 @@ For setup instructions, please follow the links to the respective repositories:
 - **Yolov8-seg**: [Yolov8 Repository](https://docs.ultralytics.com/models/yolov8/#performance-metrics) 
 
 
-Note: The models should be converted to ONNX format and placed in the `seg_models` directory.
+*Note*: The models should be converted to ONNX format and placed in the `seg_models` directory.
 
 Usage
 -----
@@ -100,7 +100,7 @@ where:
 * `OBFS_TYPE_1 OBFS_TYPE_2 ...` available obfuscation types are `bluring`, `masking`, and `pixelation`.
 * `IMG_SOURCE` is the source of the images to process. This can be a file path, a URL, or a camera index.
 * `--show_fps` is an optional flag to show the frames per second.
-* `--save_boxes` is an optional flag to save the bounding boxes to a file.
+* `--show_boxes` is an optional flag to save the bounding boxes to a file.
 * `--save_video` is an optional flag to save the processed video to a file.
 
 For example:
