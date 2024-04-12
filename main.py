@@ -2,7 +2,8 @@
  TODO: 
     1) Possibiltar a escolha do modelo a ser utilizado
     2) Implementar frame obfuscatiom striding
-    """
+    3) Fazer download dos modelos automaticamente
+"""
 
 import importlib
 import argparse
@@ -20,6 +21,7 @@ importlib.reload(src.obfuscator)
 from src.seg_yolov8 import Yolov8Seg
 from src.img_handle import Camera
 from src.obfuscator import ImageObfuscator
+from src.obfuscator import Colors
 
 
 def load_config():
@@ -53,6 +55,10 @@ def main(
 
     camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
 
+    colors = Colors(model_config["num_classes"])
+    colors_dict = colors.get_colors_dict()
+
+    print(f"DEBUG: colors: {colors}")
     # print(f"DEBUG: policies dict: {policies}")
 
     obfuscator = ImageObfuscator(policies=policies)
@@ -76,6 +82,7 @@ def main(
                     img=frame,
                     bbox=box[0:4],
                     class_name=model_config["class_names"][int(box[5])],
+                    color=colors_dict[int(box[5])],
                     policy=policies[int(box[5])],
                     score=box[4],
                 )

@@ -1,17 +1,38 @@
-# ignore folder test_data
-test_data
-datasets
-keras_core/data_voc2007
 
-# ignore README.md from yolov5 folder
-yolov5/README_yolov5.md
-runs/
+# IDEs and editors
+/.vscode
+*.swp
+*.swo
+*.swn
+*.bak
+*.orig
 
-yolov5/.github/
-
-# folders to ignore
-playground
-.vscode
+# Python artifacts
+*.pyc
+*.pyo
+*.pyd
+*.egg
+*.egg-info
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+__pycache__/
+**/__pycache__/*
 
 # files to ignore
 img_source_test.py
+
+# file types to ignore
+*.mp4
+*.pt
+*.pth
+*.onnx
+src/__pycache__/obfuscator.cpython-310.pyc
+src/__pycache__/seg_yolov8.cpython-310.pyc

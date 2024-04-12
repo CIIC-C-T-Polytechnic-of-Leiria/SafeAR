@@ -72,6 +72,15 @@ pip install -r requirements.txt
 
 Note: SafeAR SaaS was tested using Python 3.10.12.
 
+Model Download and Conversion
+------------------------------  
+
+-RT-DETR -> follow instructions in the [RT-DETR repository](https://github.com/lyuwenyu/RT-DETR/tree/main/rtdetr_pytorch)
+-Yolov5 -> follow instructions in the [Yolov5 repository]()
+-Yolov8 -> follow instructions in the [Yolov8 repository]()
+
+Note: The models should be converted to ONNX format and placed in the `seg_models` directory.
+
 Usage
 -----
 

@@ -1,8 +1,0 @@
-{
-    "name": "Python: YOLO",
-    "type": "python",
-    "request": "launch",
-    "program": "/home/tiagociic/Projectos/SafeAR/ultralytics/ultralytics/models/yolo/segment/predict.py",
-    "console": "integratedTerminal",
-    "args": ["segment", "predict", "model=yolov8n-seg.pt", "source=0", "show=True", "classes=0"],
-}

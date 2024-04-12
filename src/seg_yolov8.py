@@ -316,7 +316,7 @@ class Yolov8Seg:
         class_name: str,
         policy: str,
         score: float,
-        color=(0, 150, 255),
+        color: Tuple[int, int, int],
         thickness=1,
         font=cv2.FONT_HERSHEY_PLAIN,
         font_scale=0.8,

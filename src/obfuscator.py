@@ -56,7 +56,7 @@ class ImageObfuscator:
     def apply_pixelate(self, image, mask):
         mask = mask.astype(np.uint8) * 255
         pixelated_image = cv2.resize(
-            image, (0, 0), fx=0.05, fy=0.05, interpolation=cv2.INTER_NEAREST
+            image, (0, 0), fx=0.03, fy=0.03, interpolation=cv2.INTER_NEAREST
         )
         pixelated_image = cv2.resize(
             pixelated_image,
@@ -84,69 +84,45 @@ class ImageObfuscator:
         return image
 
 
-# class Colors:
+class Colors:
+    def __init__(self, num_categories):
+        """Initialize colors as hex = matplotlib.colors.TABLEAU_COLORS.values()."""
+        hexs = (
+            "FF3838",
+            "FF9D97",
+            "FF701F",
+            "FFB21D",
+            "CFD231",
+            "48F90A",
+            "92CC17",
+            "3DDB86",
+            "1A9334",
+            "00D4BB",
+            "2C99A8",
+            "00C2FF",
+            "344593",
+            "6473FF",
+            "0018EC",
+            "8438FF",
+            "520085",
+            "CB38FF",
+            "FF95C8",
+            "FF37C7",
+        )
+        self.palette = [self.hex2rgb(f"#{c}") for c in hexs]
+        self.n = len(self.palette)
+        self.colors_dict = {i: self.palette[i % self.n] for i in range(num_categories)}
 
-#     def __init__(self):
-#         """Initialize colors as hex = matplotlib.colors.TABLEAU_COLORS.values()."""
-#         hexs = (
-#             "FF3838",
-#             "FF9D97",
-#             "FF701F",
-#             "FFB21D",
-#             "CFD231",
-#             "48F90A",
-#             "92CC17",
-#             "3DDB86",
-#             "1A9334",
-#             "00D4BB",
-#             "2C99A8",
-#             "00C2FF",
-#             "344593",
-#             "6473FF",
-#             "0018EC",
-#             "8438FF",
-#             "520085",
-#             "CB38FF",
-#             "FF95C8",
-#             "FF37C7",
-#         )
-#         self.palette = [self.hex2rgb(f"#{c}") for c in hexs]
-#         self.n = len(self.palette)
-#         self.pose_palette = np.array(
-#             [
-#                 [255, 128, 0],
-#                 [255, 153, 51],
-#                 [255, 178, 102],
-#                 [230, 230, 0],
-#                 [255, 153, 255],
-#                 [153, 204, 255],
-#                 [255, 102, 255],
-#                 [255, 51, 255],
-#                 [102, 178, 255],
-#                 [51, 153, 255],
-#                 [255, 153, 153],
-#                 [255, 102, 102],
-#                 [255, 51, 51],
-#                 [153, 255, 153],
-#                 [102, 255, 102],
-#                 [51, 255, 51],
-#                 [0, 255, 0],
-#                 [0, 0, 255],
-#                 [255, 0, 0],
-#                 [255, 255, 255],
-#             ],
-#             dtype=np.uint8,
-#         )
+    def __call__(self, i, bgr=False):
+        """Converts hex color codes to RGB values."""
+        c = self.colors_dict[i]
+        return (c[2], c[1], c[0]) if bgr else c
 
-#     def __call__(self, i, bgr=False):
-#         """Converts hex color codes to RGB values."""
-#         c = self.palette[int(i) % self.n]
-#         return (c[2], c[1], c[0]) if bgr else c
+    def get_colors_dict(self):
+        """Returns the colors dictionary."""
+        return self.colors_dict
 
-#     @staticmethod
-#     def hex2rgb(h):
-#         """Converts hex color codes to RGB values (i.e. default PIL order)."""
-#         return tuple(int(h[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))
-
-
-# colors = Colors()  # create instance for 'from utils.plots import colors'
+    @staticmethod
+    def hex2rgb(h):
+        """Converts hex color codes to RGB values (i.e. default PIL order)."""
+        return tuple(int(h[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))
