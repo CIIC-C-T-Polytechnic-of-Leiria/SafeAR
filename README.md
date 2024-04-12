@@ -1,8 +1,15 @@
-<div style="display: flex; align-items: flex-end;">
+<!-- <div style="display: flex; align-items: flex-end;">
 <img width="100" height="80" src="assets/safeAR_ipl_v1.png">
 <h1 style="margin-left: 20px;">SafeAR SaaS - Privacy in AR contexts as a service</h1>
-</div>
+</div> -->
 
+
+<img align="left" width="100" height="100" src="assets\safeAR_ipl_icon.png">
+
+# SafeAR SaaS - Privacy in AR contexts as a service
+
+<!-- verical space -->
+<br/><br/>
 
 Introducing SafeAR SaaS - the ultimate privacy solution for AR contexts! Our system takes input from mobile device cameras and returns a sanitazed version of the data with sensitive information obscured. With four modules - Preprocessing, Object Detection and Segmentation, Transformation or Obfuscation, and Post-processing - SafeAR SaaS ensures privacy protection.
 

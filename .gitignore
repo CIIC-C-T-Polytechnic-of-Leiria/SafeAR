@@ -12,3 +12,6 @@ yolov5/.github/
 # folders to ignore
 playground
 .vscode
+
+# files to ignore
+img_source_test.py
