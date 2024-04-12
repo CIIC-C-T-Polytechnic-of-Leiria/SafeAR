@@ -3,15 +3,13 @@
 <h1 style="margin-left: 20px;">SafeAR SaaS - Privacy in AR contexts as a service</h1>
 </div> -->
 
-
 <img align="left" width="100" height="100" src="assets\safeAR_ipl_icon.png">
 
 # SafeAR - Privacy in AR contexts aaS
 
-<!-- verical space -->
 <br/><br/>
 
-Introducing SafeAR SaaS - the ultimate privacy solution for AR contexts! Our system takes input from mobile device cameras and returns a sanitazed version of the data with sensitive information obscured. With four modules - Preprocessing, Object Detection and Segmentation, Transformation or Obfuscation, and Post-processing - SafeAR SaaS ensures privacy protection.
+Introducing SafeAR aaS - the ultimate privacy solution for AR contexts! Our system takes input from mobile device cameras and returns a sanitazed version of the data with sensitive information obscured. With four modules - `Preprocessing`, `Object Detection` and `Segmentation`, `Transformation` (or Obfuscation), and `Post-processing` - SafeAR aaS ensures privacy protection.
 
 <p align="center">
 <img src="assets/safeAR_layer_v0.png" width="750px"/>
@@ -69,15 +67,18 @@ Install the required packages:
 ```
 pip install -r requirements.txt
 ```
-
 Note: SafeAR SaaS was tested using Python 3.10.12.
+
 
 Model Download and Conversion
 ------------------------------  
 
--RT-DETR -> follow instructions in the [RT-DETR repository](https://github.com/lyuwenyu/RT-DETR/tree/main/rtdetr_pytorch)
--Yolov5 -> follow instructions in the [Yolov5 repository]()
--Yolov8 -> follow instructions in the [Yolov8 repository]()
+For setup instructions, please follow the links to the respective repositories:
+
+<!-- - **RT-DETR**: [RT-DETR Repository](https://github.com/lyuwenyu/RT-DETR/tree/main/rtdetr_pytorch) -->
+- **Yolov5-seg**: [Yolov5 Repository](https://gitcode.net/openmodel/yolov5-seg)
+- **Yolov8-seg**: [Yolov8 Repository](https://docs.ultralytics.com/models/yolov8/#performance-metrics) 
+
 
 Note: The models should be converted to ONNX format and placed in the `seg_models` directory.
 
