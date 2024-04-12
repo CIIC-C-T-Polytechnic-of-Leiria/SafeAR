@@ -61,7 +61,7 @@ Installation
 
 Clone the repository:
 ```bash
-git clone https://github.com/yourusername/safeAR-saas.git
+git clone https://github.com/CIIC-C-T-Polytechnic-of-Leiria/SafeAR.git
 ```
 Install the required packages:
 ```
