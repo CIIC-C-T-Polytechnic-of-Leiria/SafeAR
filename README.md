@@ -103,7 +103,7 @@ python main.py
 where:
 
 * `MODEL_NUMBER` is the number of the model to use (0-based index).
-* `CLASS_ID_1 CLASS_ID_2 ...` is a list of class IDs to obfuscate. If model is trained in COCO dataset, see the mapping [here](
+* `CLASS_ID_1 CLASS_ID_2 ...` is a list of class IDs to obfuscate. If model is trained in COCO dataset, see the mapping [here](seg_models/mscoco_classID_labels.txt)
 * `OBFS_TYPE_1 OBFS_TYPE_2 ...` available obfuscation types are `bluring`, `masking`, and `pixelation`.
 * `IMG_SOURCE` is the source of the images to process. This can be a file path, a URL, or a camera index.
 * `--show_fps` is an optional flag to show the frames per second.
