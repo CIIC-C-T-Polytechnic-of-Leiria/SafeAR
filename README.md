@@ -6,7 +6,7 @@
 
 <img align="left" width="100" height="100" src="assets\safeAR_ipl_icon.png">
 
-## SafeAR SaaS - Privacy in AR contexts as a service
+# SafeAR - Privacy in AR contexts aaS
 
 <!-- verical space -->
 <br/><br/>
