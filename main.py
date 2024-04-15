@@ -1,9 +1,10 @@
 """
  TODO: 
-    1) Possibiltar a escolha do modelo a ser utilizado
-    1.1) Correr com GPU!
-    2) Implementar frame obfuscatiom striding
-    3) Fazer download dos modelos automaticamente
+    1) Possibiltar ao utilizador a escolha do modelo a ser utilizado - done 
+    1.1) Correr com GPU! - doing 
+    1.2) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
+    2) Implementar frame obfuscatiom striding - implementar logica que está no Unity
+    3) Fazer download dos modelos automaticamente - optou-se por outra alternativa, por agora
 """
 
 import importlib

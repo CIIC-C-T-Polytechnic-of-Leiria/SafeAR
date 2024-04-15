@@ -9,7 +9,7 @@
 
 <br/><br/>
 
-Introducing SafeAR aaS - the ultimate privacy solution for AR contexts! Our system takes input from mobile device cameras and returns a sanitazed version of the data with sensitive information obscured.
+Introducing SafeAR aaS - the privacy solution for AR contexts! Our system takes input from mobile device cameras and returns a sanitazed version of the data with sensitive information obscured.
 
 <p align="center">
 <img src="assets/output_12_04_2024-ezgif.com-optimize.gif" width="700px" style="border:3px solid lightgray;"/>
@@ -57,7 +57,7 @@ safeAR-aaS/
 ├── 🚰 src/                      # Source code
 ├── 📁 seg_models/               # Pre-trained instance segmentation models (onnx format)
 ├── 🤷🏻‍♀️ .gitignore                # Git ignore file
-├── 🛠️ config.yml                 # Configuration file
+├── 🛠️ config.yml                # Configuration file
 ├── 🐍 main.py                   # Main script to run the API
 ├── 📜 README.md                 # Readme file
 └── 📜 requirements.txt          # Required packages
@@ -109,7 +109,6 @@ Model Download and Conversion
 You may run [this Colab script](https://colab.research.google.com/drive/1BYFWd_h6ffWTa6SXqllYfYVxjxYj10tf?usp=sharing) to download the model and convert them to ONNX format.
 
 Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
-
 
 
 <!-- For setup instructions, please follow the links to the respective repositories:
