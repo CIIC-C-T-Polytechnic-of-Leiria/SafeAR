@@ -9,10 +9,16 @@
 
 <br/><br/>
 
-Introducing SafeAR aaS - the ultimate privacy solution for AR contexts! Our system takes input from mobile device cameras and returns a sanitazed version of the data with sensitive information obscured. With four modules - `Preprocessing`, `Object Detection` and `Segmentation`, `Transformation` (or Obfuscation), and `Post-processing` - SafeAR aaS ensures privacy protection.
+Introducing SafeAR aaS - the ultimate privacy solution for AR contexts! Our system takes input from mobile device cameras and returns a sanitazed version of the data with sensitive information obscured.
 
 <p align="center">
-<img src="assets/safeAR_layer_v0.png" width="750px"/>
+<img src="assets/output_12_04_2024-ezgif.com-optimize.gif" width="700px" style="border:3px solid lightgray;"/>
+</p>
+
+With four modules - `Preprocessing`, `Object Detection` and `Segmentation`, `Transformation` (or Obfuscation), and `Post-processing` - SafeAR aaS ensures privacy protection.
+
+<p align="center">
+<img src="assets/safeAR_layer_v0.png" width="750px" style="border:3px solid lightgray;"/>
 </p>
 
 We're constantly improving and adding new features to our system. Here's what's coming up next:
@@ -33,8 +39,11 @@ In development...
 | --- | --- | --- | --- | --- | --- |
 | YOLOv5n-seg | - | COCO 2017 | 80 | - | - |
 | YOLOv8n-seg | - | COCO 2017 | 80 | - | - |
+| YOLOv9c-seg | - | COCO 2017 | 80 | - | - |
+| gelan-c-seg | - | COCO 2017 | 80 | - | - |
+| RTMDet | - | COCO 2017 | 80 | - | - |
 
-\*Measured on a HP Victus, 32 GB of memory, Intel i5-12500Hx16 processor, with Nvidia GeForceRTX 4600 and Pop!\_OS 22.04 LTS operating system.
+<small>\*Measured on: HP Victus, 32 GB of memory, Intel i5-12500Hx16 processor, Nvidia GeForceRTX 4060, Pop!\_OS 22.04 LTS operating system</small>
 
 Repository Structure
 --------------------
@@ -44,16 +53,14 @@ The repository is organized as follows:
 ```
 safeAR-aaS/
 │
-├── 📁 assets/                   # Logos and other visual assets
+├── 🏛️ assets/                   # Logos and other visual assets
+├── 🚰 src/                      # Source code
 ├── 📁 seg_models/               # Pre-trained instance segmentation models (onnx format)
-├── 📁 src/                      # Source code
-├── 📜 .gitignore                # Git ignore file
-├── 📜 config.yml                # Configuration file
-├── 📜 main.py                   # Main script to run the API
-├── 📹 output.mp4                # Sample output video
+├── 🤷🏻‍♀️ .gitignore                # Git ignore file
+├── 🛠️ config.yml                 # Configuration file
+├── 🐍 main.py                   # Main script to run the API
 ├── 📜 README.md                 # Readme file
 └── 📜 requirements.txt          # Required packages
-
 ```
 
 Installation
@@ -64,14 +71,34 @@ Clone the repository:
 git clone https://github.com/CIIC-C-T-Polytechnic-of-Leiria/SafeAR.git
 cd SafeAR
 ```
-Install the required packages:
+Create a new Conda environment (optional):
+```bash
+conda create -n safear_env python=3.10
+conda activate safear_env
 ```
+Install the CUDA Toolkit and CuDNN:
+
+```bash
+conda install cudatoolkit=11.8
+conda install cudnn=8.2.4
+```
+Install the required packages:
+```bash
 pip install -r requirements.txt
 ```
-:memo: **Note**:
-- SafeAR aaS was tested using `Python 3.10.12` environment.
-- For Nvidia GPU computers, install `onnxruntime-gpu` package.
-- For non-Nvidia GPU computers, use `onnxruntime` package.
+
+Install ONNX Runtime with GPU support:
+
+```bash
+pip install onnxruntime-gpu==1.17.0
+```
+
+:memo: Note:
+
+- SafeAR aaS was tested using Python 3.10.12 environment.
+- For Nvidia GPU computers, install onnxruntime-gpu package.
+- For non-Nvidia GPU computers, use onnxruntime package.
+- The versions of CUDA, CuDNN, and ONNX Runtime must be compatible with each other and with your GPU. Always check the [official documentation](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html) for each package to ensure compatibility.
 
 Model Download and Conversion
 ------------------------------ 
@@ -141,9 +168,6 @@ Replace model_name with the name of the model you're exporting (e.g., yolov9-c, 
 
 This guide provides a concise way to download YOLOv9 model weights, convert them to ONNX format, move the exported models to a specified folder, and clean up the original .pt files. -->
 </details>
-
-
-
 
 
 <details>

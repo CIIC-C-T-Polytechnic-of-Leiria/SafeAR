@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import onnxruntime as ort  # If possible, use onnxruntime-gpu!
+import onnxruntime
 from typing import Tuple
 
 
