@@ -1,6 +1,7 @@
 """
  TODO: 
     1) Possibiltar a escolha do modelo a ser utilizado
+    1.1) correr com GPU!
     2) Implementar frame obfuscatiom striding
     3) Fazer download dos modelos automaticamente
 """

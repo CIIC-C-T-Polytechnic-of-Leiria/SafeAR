@@ -62,25 +62,97 @@ Installation
 Clone the repository:
 ```bash
 git clone https://github.com/CIIC-C-T-Polytechnic-of-Leiria/SafeAR.git
+cd SafeAR
 ```
 Install the required packages:
 ```
 pip install -r requirements.txt
 ```
-*Note*: SafeAR aaS was tested using Python 3.10.12 environment.
-
+:memo: **Note**:
+- SafeAR aaS was tested using `Python 3.10.12` environment.
+- For Nvidia GPU computers, install `onnxruntime-gpu` package.
+- For non-Nvidia GPU computers, use `onnxruntime` package.
 
 Model Download and Conversion
-------------------------------  
+------------------------------ 
+
+<details>
+<summary> <b>Yolov5-seg</b> model </summary>
+
+You may run [this Colab script](https://colab.research.google.com/drive/1BYFWd_h6ffWTa6SXqllYfYVxjxYj10tf?usp=sharing) to download the model and convert them to ONNX format.
+
+Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
+
+
+
+<!-- For setup instructions, please follow the links to the respective repositories:
+
+- **Yolov5-seg**: [Yolov5 Repository](https://gitcode.net/openmodel/yolov5-seg)
+
+Afterwards, move the exported `onnx` model(s) to the `seg_models` directory. -->
+
+</details>
+
+<details>
+<summary> <b>Yolov8-seg</b> model </summary>
 
 For setup instructions, please follow the links to the respective repositories:
 
-<!-- - **RT-DETR**: [RT-DETR Repository](https://github.com/lyuwenyu/RT-DETR/tree/main/rtdetr_pytorch) -->
-- **Yolov5-seg**: [Yolov5 Repository](https://gitcode.net/openmodel/yolov5-seg)
 - **Yolov8-seg**: [Yolov8 Repository](https://docs.ultralytics.com/models/yolov8/#performance-metrics) 
 
+Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
 
-*Note*: The models should be converted to ONNX format and placed in the `seg_models` directory.
+</details>
+
+
+<details>
+<summary> <b>Yolov9-seg</b> and <b>Gelan</b> models </summary>
+
+You may run [this Colab script](https://colab.research.google.com/drive/1Sv6cvCuAHWOOouXKy1dJ-G18RtMSk7dA?usp=sharing) to download the models and convert them to ONNX format.
+
+Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
+
+
+<!-- To convert the process of downloading four YOLOv9 model weights, converting them to ONNX format, and moving the exported models to a specific folder in GitHub Markdown, while also deleting the original .pt files, follow these steps:
+
+1. **Create Weights Directory**:
+```bash
+!mkdir -p {HOME}/weights
+```
+2. **Download Model Weights**:
+
+Choose one of the following `yolov9-c-seg.pt`, `gelan-c-seg.pt`:
+
+```bash
+!wget -P {HOME}/weights -q https://github.com/WongKinYiu/yolov9/releases/download/v0.1/{MODEL_NAME}.pt
+```
+
+3. **Export Models to ONNX and Move to seg_models Folder**:
+
+For each model, run the export.py script with the appropriate arguments to export the model to ONNX format. Then, move the ONNX files to the seg_models folder and delete the original .pt files.
+
+```bash
+
+python export.py --weights {HOME}/weights/model_name.pt --include onnx
+mv {HOME}/weights/model_name.onnx seg_models/
+rm {HOME}/weights/model_name.pt
+``` 
+Replace model_name with the name of the model you're exporting (e.g., yolov9-c, yolov9-e, gelan-c, gelan-e).
+
+This guide provides a concise way to download YOLOv9 model weights, convert them to ONNX format, move the exported models to a specified folder, and clean up the original .pt files. -->
+</details>
+
+
+
+
+
+<details>
+<summary> <b>RTMDet</b> model </summary>
+
+Under construction...
+
+</details>
+
 
 Usage
 -----
