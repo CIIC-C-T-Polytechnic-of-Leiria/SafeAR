@@ -6,6 +6,7 @@ class Camera:
     def __init__(
         self, source, display_fps=False, save_video=False, output_file="output.mp4"
     ):
+        print(f"source: {source}, tp: {type(source)} ")
         if isinstance(source, int):
             self.cap = cv2.VideoCapture(source)
         elif isinstance(source, str):

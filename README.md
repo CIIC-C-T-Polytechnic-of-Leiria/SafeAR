@@ -1,9 +1,9 @@
-<!-- <div style="display: flex; align-items: flex-end;">
-<img width="100" height="80" src="assets/safeAR_ipl_v1.png">
-<h1 style="margin-left: 20px;">SafeAR SaaS - Privacy in AR contexts as a service</h1>
-</div> -->
+<div style="display: flex; align-items: center; justify-content: center;">
+  <img width="100" height="100" src="assets/safeAR_ipl_icon.png">
+  <h1 style="margin-left: 20px;">SafeAR - Privacy in AR Contexts as a Service</h1>
+</div>
 
-<div align="center"> <img width="100" height="100" src="assets/safeAR_ipl_icon.png"> <h1>SafeAR - Privacy in AR Contexts as a Service</h1> </div>
+<!-- <div align="center"> <img width="100" height="100" src="assets/safeAR_ipl_icon.png"> <h1>SafeAR - Privacy in AR Contexts as a Service</h1> </div> -->
 
 ### Overview
 
@@ -192,3 +192,5 @@ License
 <p align="center">
 <img src="assets/CIIC_logo_v2.png" width="750px"/>
 </p>
+
+

@@ -34,5 +34,8 @@ img_source_test.py
 *.pt
 *.pth
 *.onnx
+*.prof
+*.deb
+*.pyc
 src/__pycache__/obfuscator.cpython-310.pyc
 src/__pycache__/seg_yolov8.cpython-310.pyc

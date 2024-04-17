@@ -7,6 +7,12 @@
     3) Fazer download dos modelos automaticamente - optou-se por outra alternativa, por agora
 """
 
+import cProfile
+import pstats
+import io
+from pstats import SortKey
+
+
 import importlib
 import argparse
 import yaml
@@ -99,9 +105,8 @@ def main(
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
-        # description="\n\nUsage example:\n  python main.py --model_number 0 --class_id_list 0 1 2 --obfuscation_type_list bluring masking pixelation --img_source 0 --show_fps"
-    )
+    parser = argparse.ArgumentParser()
+
     parser.add_argument(
         "--model_number",
         type=int,
@@ -125,10 +130,10 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--img_source",
+        type=lambda x: int(x) if x.isdigit() else x,
         default=0,
-        help="Specify the source of the images to process. Default is 0.",
+        help="Image source, can be a number or a path. Default is 0.",
     )
-
     parser.add_argument(
         "--show_fps",
         action="store_true",
@@ -179,6 +184,9 @@ if __name__ == "__main__":
             )
         }
     )
+    # Start profiling
+    pr = cProfile.Profile()
+    pr.enable()
 
     main(
         model_number=args.model_number,
@@ -189,3 +197,16 @@ if __name__ == "__main__":
         save_video=args.save_video,
         config=config,
     )
+    # Stop profiling
+    pr.disable()
+
+    # Create a StringIO object to hold the profiling results
+    s = io.StringIO()
+
+    # Sort the results by cumulative time spent in the function
+    sortby = SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+
+    # Print the profiling results
+    print(s.getvalue())
