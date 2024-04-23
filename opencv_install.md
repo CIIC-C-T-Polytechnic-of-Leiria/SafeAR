@@ -1,3 +1,35 @@
+### cuPy Installation
+
+Define PATH variables for CUDA and cuDNN:
+
+```bash
+
+
+Before installing cuPy, recommend you to upgrade setuptools and pip:
+```bash
+pip install -U setuptools pip
+```
+
+Part of the CUDA features in CuPy will be activated only when the corresponding libraries are installed.
+
+cuTENSOR: v2.0
+
+The library to accelerate tensor operations. See Environment variables for the details.
+
+NCCL: v2.16 / v2.17
+
+The library to perform collective multi-GPU / multi-node computations.
+
+cuDNN: v8.8
+
+The library to accelerate deep neural network computations.
+
+cuSPARSELt: v0.2.0
+
+The library to accelerate sparse matrix-matrix multiplication
+
+
+
 ### OpenCV with CUDA and cuDNN on Ubuntu 22.04 LTS, System-wide Installation
 
 ### !9 de abril de 2024
@@ -116,9 +148,122 @@ Nothing is returnede
   349  sudo apt autoclean
   350  sudo apt update
   351  history
+
 ---
 Instalação CUDA Toolkit para Ubuntu 22.04 LTS (deb local)
 Recomenda-se a instalação de package especificas ao SO, no caso do Ubuntu, .deb, ao invés de .run
+
+Nota: por agora sem GDS packages.
+
+
+Post installation actions
+
+
+export PATH=/usr/local/cuda-12.4/bin${PATH:+:${PATH}}
+# verica a versão do driver
+cat /proc/driver/nvidia/version
+
+NVRM version: NVIDIA UNIX Open Kernel Module for x86_64  550.54.15  Release Build  (dvs-builder@U16-A24-23-2)  Tue Mar  5 22:15:33 UTC 2024
+GCC version:  gcc version 12.3.0 (Ubuntu 12.3.0-1ubuntu1~22.04) 
+
+# verifica a versão do CUDA
+nvcc --version
+
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2024 NVIDIA Corporation
+Built on Thu_Mar_28_02:18:24_PDT_2024
+Cuda compilation tools, release 12.4, V12.4.131
+Build cuda_12.4.r12.4/compiler.34097967_0
+
+
+ Install Third-party Libraries
+Some CUDA samples use third-party libraries which may not be installed by default on your system. These samples attempt to detect any required libraries when building.
+
+If a library is not detected, it waives itself and warns you which library is missing. To build and run these samples, you must install the missing libraries. In cases where these dependencies are not installed, follow the instructions below.
+
+sudo apt-get install g++ freeglut3-dev build-essential libx11-dev \
+    libxmu-dev libxi-dev libglu1-mesa-dev libfreeimage-dev libglfw3-dev
+
+CUDA e DRIVERS instalados com sucesso!!!
+Nota: 
+tiagociiic@tiagociiic:~$ gcc --version
+gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+
+tiagociiic@tiagociiic:~$ gcc g++ --version
+gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+
+Vamos ao cuDNN agora (ubuntu local e deb)
+-----------------------
+(cuDNN, ou CUDA Deep Neural Network library, é uma biblioteca de software desenvolvida pela NVIDIA para acelerar a computação de redes neuronais profundas (Deep Neural Networks) em GPUs NVIDIA.)
+https://docs.nvidia.com/deeplearning/cudnn/latest/installation/linux.html
+
+distro: ubuntu2204
+arch: x86_64
+https://developer.nvidia.com/cudnn-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_local
+
+
+wget https://developer.download.nvidia.com/compute/cudnn/9.1.0/local_installers/cudnn-local-repo-ubuntu2204-9.1.0_1.0-1_amd64.deb
+sudo dpkg -i cudnn-local-repo-ubuntu2204-9.1.0_1.0-1_amd64.deb
+sudo cp /var/cudnn-local-repo-ubuntu2204-9.1.0/cudnn-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get -y install cudnn
+
+tiagociiic@tiagociiic:/usr/share/keyrings$ sudo apt-get -y install cudnn
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+E: Unable to locate package cudnn
+
+
+### Install the per-CUDA meta-packages (cuDNN 9.1.0 with CUDA 12.4)
+
+sudo apt-get -y install cudnn9-cuda-12
+
+
+Verificando a Instalação no Linux
+
+Para verificar se o cuDNN está instalado e está funcionando corretamente, compile o exemplo mnistCUDNN localizado na pasta /usr/src/cudnn_samples_v9 no arquivo Debian.
+Instale os exemplos do cuDNN.
+Vá para o caminho gravável.
+Compile o exemplo mnistCUDNN.
+Execute o exemplo mnistCUDNN.
+
+```bash
+sudo apt-get -y install libcudnn9-samples
+cd $HOME/cudnn_samples_v9/mnistCUDNN
+make clean && make
+./mnistCUDNN
+```
+
+Se o cuDNN estiver instalado e funcionando corretamente em seu sistema Linux, você verá uma mensagem semelhante à seguinte, se tudo estiver funcionando corretamente:
+
+Test passed!
+
+
+| Architecture | OS Name | OS Version | Distro Information: Kernel | Distro Information: GCC | Distro Information: Glibc |
+| --- | --- | --- | --- | --- | --- |
+| x86\_64 | Ubuntu | 22.04 | 6.2.0 | 11.4.0 | 2.35 |
+
+This table shows that cuDNN supports Ubuntu 22.04 x86\_64 with kernel version 6.2.0, GCC version 11.4.0, and glibc version 2.35.
+
+| cuDNN Package | CUDA Toolkit Version | Supports static linking? | NVIDIA Driver Version for Linux | NVIDIA Driver Version for Windows | CUDA Compute Capability | Supported NVIDIA Hardware |
+| --- | --- | --- | --- | --- | --- | --- |
+| cuDNN 9.1.0 for CUDA 12.x | 12.4 | Yes | >=525.60.13 | >=527.41 | 9.0 3, 8.9 3, 8.6, 8.0, 7.5, 7.0, 6.1, 6.0, 5.0 | NVIDIA Hopper 3, NVIDIA Ada Lovelace architecture 3, NVIDIA Ampere architecture, NVIDIA Turing, NVIDIA Volta, NVIDIA Pascal, NVIDIA Maxwell |
+
+This table shows that cuDNN 9.1.0 for CUDA 12.x supports CUDA Toolkit versions 12.4, and it supports static linking. The NVIDIA driver versions required for Linux and Windows are >=525.60.13 and >=527.41, respectively. The supported CUDA compute capabilities are 9.0 3, 8.9 3, 8.6, 8.0, 7.5, 7.0, 6.1, 6.0, and 5.0, and the supported NVIDIA hardware includes NVIDIA Hopper 3, NVIDIA Ada Lovelace architecture 3, NVIDIA Ampere architecture, NVIDIA Turing, NVIDIA Volta, NVIDIA Pascal, and NVIDIA Maxwell.
+
+Source: https://docs.nvidia.com/deeplearning/cudnn/latest/reference/support-matrix.html#support-matrix)
+
+Vamos ao OpenCV agora...
+------------------------
+
+cmake -S /home/tiagociiic/OpenCV/opencv-4.9.0 -B /home/tiagociiic/OpenCV/opencv-4.9.0/build -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_CUDA=ON -D WITH_CUDNN=ON -D WITH_CUBLAS=ON -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D WITH_TBB=ON -D OPENCV_DNN_CUDA=ON -D OPENCV_ENABLE_NONFREE=ON -D CUDA_ARCH_BIN=8.9 -D OPENCV_EXTRA_MODULES_PATH=$HOME/OpenCV/opencv_contrib-4.9.0/modules -D BUILD_EXAMPLES=OFF -D HAVE_opencv_python3=ON -D ENABLE_FAST_MATH=ON
+
+![alt text](image.png)
+
+
+
+
 
 ```bash
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
@@ -175,7 +320,6 @@ sudo update-initramfs -u
 
 sudo sh cuda_12.4.1_550.54.15_linux.run --toolkit --silent --override
 
-
 export CUDA_HOME=/usr/local/cuda-12.4
 export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:$LD_LIBRARY_PATH
 export PATH=${CUDA_HOME}/bin:${PATH}
@@ -214,6 +358,11 @@ $ sudo apt-get install libcudnn8-samples=${cudnn_version}-1+cuda12.4
 sudo apt-get install libfreeimage-dev
 ```
 
+wget https://developer.download.nvidia.com/compute/cudnn/9.1.0/local_installers/cudnn-local-repo-ubuntu2204-9.1.0_1.0-1_amd64.deb
+sudo dpkg -i cudnn-local-repo-ubuntu2204-9.1.0_1.0-1_amd64.deb.1
+sudo cp /var/cudnn-local-*/cudnn-*-keyring.gpg /usr/share/keyrings/
+
+
 ```bash
 
 sudo apt install cmake
@@ -242,6 +391,8 @@ cmake -S /home/tiagociiic/OpenCV/opencv -B /home/tiagociiic/OpenCV/opencv/build 
 
 cmake -D CMAKE_C_COMPILER="/usr/bin/gcc-10" -D CMAKE_CXX_COMPILER "/usr/bin/g++-10" 
 
+cmake 
+cmake -S /home/tiagociiic/OpenCV/opencv-4.9.0 -B /home/tiagociiic/OpenCV/opencv-4.9.0/build -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_CUDA=ON -D WITH_CUDNN=ON -D WITH_CUBLAS=ON -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D WITH_TBB=ON -D OPENCV_DNN_CUDA=ON -D OPENCV_ENABLE_NONFREE=ON -D CUDA_ARCH_BIN=8.9 -D OPENCV_EXTRA_MODULES_PATH=$HOME/OpenCV/opencv_contrib-4.9.0/modules -D BUILD_EXAMPLES=OFF -D HAVE_opencv_python3=ON -D ENABLE_FAST_MATH=ON
 
 
 Change Gcc to version 10
@@ -288,18 +439,19 @@ sudo apt-get install build-essential cmake python3-numpy python3-dev python3-tk 
 
 Download the OpenCV and OpenCV contrib source code, version 4.7.0:
 ```bash
-wget https://github.com/opencv/opencv/archive/refs/tags/4.7.0.tar.gz
-tar -xvzf 4.7.0.tar.gz
-rm 4.7.0.tar.gz
+wget https://github.com/opencv/opencv/archive/refs/tags/4.9.0.tar.gz
+tar -xvzf 4.9.0.tar.gz
+rm 4.9.0.tar.gz
 
-wget https://github.com/opencv/opencv_contrib/archive/refs/tags/4.7.0.tar.gz
-tar -xvzf 4.7.0.tar.gz
-rm 4.7.0.tar.gz
+wget https://github.com/opencv/opencv_contrib/archive/refs/tags/4.9.0.tar.gz
+tar -xvzf 4.9.0.tar.gz
+rm 4.9.0.tar.gz
 ```
 
 Navigate to the OpenCV directory and create a build directory
+
 ```bash 
-cd opencv-4.7.0
+cd opencv-4.9.0
 mkdir build
 cd build
 ```
@@ -309,19 +461,9 @@ Configure the OpenCV build using CMake:
 cmake 
 -D CMAKE_BUILD_TYPE=RELEASE
 -D CMAKE_INSTALL_PREFIX=/usr/local
-
-
-
-
 ```
+
 ```bash
-
-
-
-
-
-
-
 conda install cmake
 conda install cudatoolkit=11.8
 conda install -c conda-forge cudnn=8.8.0.121
@@ -331,7 +473,6 @@ sudo apt-get install ccache
 sudo apt-get install build-essential cmake pkg-config unzip yasm git checkinstall  # generic tools
 sudo apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev  # required
 sudo apt-get install python3-dev python3-numpy python3-pip
-
 sudo apt-get install libavcodec-dev libavformat-dev libavutil-dev
 ```
 Go to the environment folder

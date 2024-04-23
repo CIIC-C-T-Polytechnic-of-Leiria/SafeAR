@@ -23,11 +23,13 @@ develop-eggs/
 .installed.cfg
 lib/
 lib64/
-__pycache__/
-**/__pycache__/*
+**/__pycache__/
 
 # files to ignore
 img_source_test.py
+
+# folders to ignore
+/backup_cv2
 
 # file types to ignore
 *.mp4
@@ -37,5 +39,4 @@ img_source_test.py
 *.prof
 *.deb
 *.pyc
-src/__pycache__/obfuscator.cpython-310.pyc
-src/__pycache__/seg_yolov8.cpython-310.pyc
+

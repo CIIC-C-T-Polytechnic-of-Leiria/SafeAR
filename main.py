@@ -12,7 +12,6 @@ import pstats
 import io
 from pstats import SortKey
 
-
 import importlib
 import argparse
 import yaml
@@ -31,6 +30,10 @@ from src.img_handle import Camera
 from src.obfuscator import ImageObfuscator
 from src.obfuscator import Colors
 
+# Testing imports
+import imageio
+import cupy as cp
+
 
 def load_config():
     with open("config.yml", "r") as file:
@@ -44,6 +47,11 @@ def list_models(config):
     for i, model in enumerate(models, start=1):
         print(f"    [{i}] - {model}")
 
+
+
+def read_image_as_cupy_array(image_path):
+    image = imageio.imread(image_path)
+    return cp.asarray(image)
 
 def main(
     model_number: int,
@@ -63,16 +71,18 @@ def main(
 
     camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
 
+    frame = read_image_as_cupy_array("test_samples/images/cars.jpg")
+
     colors = Colors(model_config["num_classes"])
     colors_dict = colors.get_colors_dict()
 
-    print(f"DEBUG: colors: {colors}")
+    # print(f"DEBUG: colors: {colors}")
     # print(f"DEBUG: policies dict: {policies}")
 
     obfuscator = ImageObfuscator(policies=policies)
 
     while True:
-        frame = camera.get_frame()
+        # frame = camera.get_frame()
         if frame is None:
             break
 
@@ -84,23 +94,40 @@ def main(
             class_ids=[int(box[5]) for box in boxes],
         )
 
-        if display_boxes:
-            for box in boxes:
-                model.draw_bbox(
-                    img=frame,
-                    bbox=box[0:4],
-                    class_name=model_config["class_names"][int(box[5])],
-                    color=colors_dict[int(box[5])],
-                    policy=policies[int(box[5])],
-                    score=box[4],
-                )
+        # save the processed frame
+        imageio.imwrite("test_samples/images/cars_processed.jpg", frame.get())
 
-        camera.display_frame(frame, info="Press 'q' to quit.")
 
-        if not camera.wait_key("q"):
-            break
+    # while True:
+    #     frame = camera.get_frame()
+    #     if frame is None:
+    #         break
 
-    camera.release()
+    #     boxes, masks = model(frame)
+
+    #     frame = obfuscator.obfuscate(
+    #         masks=masks,
+    #         image=frame,
+    #         class_ids=[int(box[5]) for box in boxes],
+    #     )
+
+    #     if display_boxes:
+    #         for box in boxes:
+    #             model.draw_bbox(
+    #                 img=frame,
+    #                 bbox=box[0:4],
+    #                 class_name=model_config["class_names"][int(box[5])],
+    #                 color=colors_dict[int(box[5])],
+    #                 policy=policies[int(box[5])],
+    #                 score=box[4],
+    #             )
+
+    #     camera.display_frame(frame, info="Press 'q' to quit.")
+
+    #     if not camera.wait_key("q"):
+    #         break
+
+    # camera.release()
 
 
 if __name__ == "__main__":
@@ -168,7 +195,6 @@ if __name__ == "__main__":
             len(args.class_id_list) - len(args.obfuscation_type_list)
         )
 
-    # From config.yml, count the number of classes in the model
     config = load_config()
     num_classes = config["models"]["yolov8"]["num_classes"]
 

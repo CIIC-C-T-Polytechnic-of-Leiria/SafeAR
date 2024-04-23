@@ -1,35 +1,20 @@
-import cv2
-import numpy as np
+import cupy as cp
+from cucim.skimage import transform
 
 
 class ImageObfuscator:
-    """
-    The ImageObfuscator class applies various obfuscation policies to an image.
-
-    Attributes:
-        policies (dict): A dictionary mapping class labels to obfuscation policies.
-        available_policies (list): A list of available obfuscation policies.
-
-    Methods:
-        validate_inputs(masks, image): Validates the inputs to the obfuscate method.
-        apply_mask(image, mask): Applies a mask to the image.
-        apply_blur(image, mask): Applies a blur to the image.
-        apply_pixelate(image, mask): Applies pixelation to the image.
-        obfuscate(masks, image, classes): Applies the obfuscation policies to the image.
-    """
-
     def __init__(self, policies: dict):
         self.policies = policies
         self.available_policies = ["masking", "bluring", "pixelation", "none"]
 
-    def validate_inputs(self, masks, image):
+    def validate_inputs(self, masks: cp.ndarray, image: cp.ndarray):
         if masks is not None and len(masks) > 0:
-            if len(masks.shape) != 3 or masks.dtype != np.bool_:
+            if len(masks.shape) != 3 or masks.dtype != cp.bool_:
                 raise ValueError(
                     f"masks has shape {masks.shape} and dtype {masks.dtype}, expected shape (n, H, W) and dtype bool"
                 )
 
-        if len(image.shape) != 3 or image.shape[2] != 3 or image.dtype != np.uint8:
+        if len(image.shape) != 3 or image.shape[2] != 3 or image.dtype != cp.uint8:
             raise ValueError(
                 f"image has shape {image.shape} and dtype {image.dtype}, expected shape (H, W, 3) and dtype uint8"
             )
@@ -38,39 +23,49 @@ class ImageObfuscator:
             if policy not in self.available_policies:
                 raise ValueError(f"Unknown policy: {policy}")
 
-    def apply_mask(self, image, mask):
-        mask = mask.astype(np.uint8) * 255
-        inverse_mask = cv2.bitwise_not(mask)
-        masked_image = cv2.bitwise_and(image, image, mask=inverse_mask)
-        return masked_image
+    def apply_mask(self, image: cp.ndarray, mask: cp.ndarray):
+        mask = mask.astype(cp.uint8) * 255
+        inverse_mask = cp.logical_not(mask)
+        masked_image = cp.where(inverse_mask, image, 0)
+        return masked_image.get()
 
-    def apply_blur(self, image, mask):
-        mask = mask.astype(np.uint8) * 255
-        blurred_image = cv2.medianBlur(image, ksize=51)
-        mask_inv = cv2.bitwise_not(mask)
-        final_image = cv2.bitwise_and(image, image, mask=mask_inv) + cv2.bitwise_and(
-            blurred_image, blurred_image, mask=mask
+    def apply_blur(self, image: cp.ndarray, mask: cp.ndarray):
+        mask = mask.astype(cp.uint8) * 255
+        blurred_image = cp.ndimage.median_filter(image, size=(51, 51, 1))
+        mask_inv = cp.logical_not(mask)
+        final_image = cp.where(mask_inv, image, blurred_image)
+        return final_image.get()
+
+    def apply_pixelate(
+        self, image: cp.ndarray, mask: cp.ndarray, rescale: int = 30
+    ) -> cp.ndarray:
+
+        image_cp = cp.asarray(image, dtype=cp.uint8)
+
+        pixelated_img_small = transform.resize(
+            image=image_cp,
+            order=0,
+            output_shape=(image_cp.shape[0] // rescale, image_cp.shape[1] // rescale),
+            preserve_range=True,
+            anti_aliasing=False,
         )
+        pixelated_image = transform.resize(
+            image=pixelated_img_small,
+            order=0,
+            output_shape=(image_cp.shape[0], image_cp.shape[1]),
+            preserve_range=True,
+            anti_aliasing=False,
+        )
+
+        mask = mask.astype(cp.uint8) * 255
+        mask = cp.repeat(mask[..., None], 3, axis=-1)
+        final_image = cp.where(mask == 0, pixelated_image, image_cp)
+
         return final_image
 
-    def apply_pixelate(self, image, mask):
-        mask = mask.astype(np.uint8) * 255
-        pixelated_image = cv2.resize(
-            image, (0, 0), fx=0.03, fy=0.03, interpolation=cv2.INTER_NEAREST
-        )
-        pixelated_image = cv2.resize(
-            pixelated_image,
-            (image.shape[1], image.shape[0]),
-            interpolation=cv2.INTER_NEAREST,
-        )
-        mask_inv = cv2.bitwise_not(mask)
-        final_image = cv2.bitwise_and(image, image, mask=mask_inv) + cv2.bitwise_and(
-            pixelated_image, pixelated_image, mask=mask
-        )
-        return final_image
-
-    def obfuscate(self, masks, image, class_ids):
+    def obfuscate(self, masks: cp.ndarray, image: cp.ndarray, class_ids: list):
         self.validate_inputs(masks, image)
+
         for mask, class_id in zip(masks, class_ids):
             policy = self.policies.get(class_id)
             if policy == "masking":
@@ -81,11 +76,12 @@ class ImageObfuscator:
                 image = self.apply_pixelate(image, mask)
             else:
                 pass
-        return image
+
+        return image.get()
 
 
 class Colors:
-    def __init__(self, num_categories):
+    def __init__(self, num_categories: int):
         """Initialize colors as hex = matplotlib.colors.TABLEAU_COLORS.values()."""
         hexs = (
             "FF3838",
@@ -113,7 +109,7 @@ class Colors:
         self.n = len(self.palette)
         self.colors_dict = {i: self.palette[i % self.n] for i in range(num_categories)}
 
-    def __call__(self, i, bgr=False):
+    def __call__(self, i: int, bgr=False):
         """Converts hex color codes to RGB values."""
         c = self.colors_dict[i]
         return (c[2], c[1], c[0]) if bgr else c
@@ -123,6 +119,6 @@ class Colors:
         return self.colors_dict
 
     @staticmethod
-    def hex2rgb(h):
+    def hex2rgb(h: str):
         """Converts hex color codes to RGB values (i.e. default PIL order)."""
         return tuple(int(h[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))

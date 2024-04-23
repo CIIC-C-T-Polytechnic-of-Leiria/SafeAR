@@ -162,11 +162,11 @@ where:
 
 For example:
 ```bash
-python main.py 
-    --model_number 0 
-    --class_id_list 0 1 2 
-    --obfuscation_type_list bluring masking pixelation 
-    --img_source 0 --show_fps
+python main.py \
+    --model_number 0 \
+    --class_id_list 0 1 2 \
+    --obfuscation_type_list bluring masking pixelation \
+    --img_source 0 --show_fps \
 ```
 This will use the first available model to obfuscate objects with class IDs 0, 1, and 2 in the video stream from the default camera, using the `bluring`, `masking`, and `pixelation` obfuscation types, and showing the frames per second on the screen.
 

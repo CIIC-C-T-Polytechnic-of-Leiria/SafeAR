@@ -1,16 +1,16 @@
-import cv2
-import numpy as np
-import onnxruntime as ort  # If possible, use onnxruntime-gpu!
+import cupy as cp
+import onnxruntime as ort
 from typing import Tuple
+from PIL import Image, ImageDraw, ImageFont
+from cucim.skimage import transform
 
 
 class Yolov8Seg:
-
     def __init__(
         self,
         model_path: str,
         target_size: Tuple[int, int] = (640, 640),
-        interpolation: int = cv2.INTER_AREA,
+        interpolation: int = 11,
         output_path: str = None,
         confidence_threshold: float = 0.6,
         iou_threshold: float = 0.55,
@@ -26,19 +26,24 @@ class Yolov8Seg:
 
         self.session = ort.InferenceSession(
             self.model_path,
-            providers=(
-                ["CUDAExecutionProvider", "CPUExecutionProvider"]
-                if ort.get_device() == "GPU"
-                else ["CPUExecutionProvider"]
-            ),
+            providers=["CPUExecutionProvider"],
         )
+
+        # self.session = ort.InferenceSession(
+        #     self.model_path,
+        #     providers=(
+        #         ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        #         if ort.get_device() == "GPU"
+        #         else ["CPUExecutionProvider"]
+        #     ),
+        # )
 
         print(f"Yolov8Seg: Model Using {ort.get_device()} for inference")
 
         self.ndtype = (
-            np.half  # np.float16
+            cp.half  # cp.float16
             if self.session.get_inputs()[0].type == "tensor(float16)"
-            else np.single  # np.float32
+            else cp.single  # cp.float32
         )
 
         self.model_input_height, self.model_input_width = [
@@ -49,18 +54,11 @@ class Yolov8Seg:
             x.shape for x in self.session.get_outputs()
         ][0][-2:]
 
-    def __call__(self, img_in: np.ndarray) -> np.ndarray:
-        # print(f"Preprocessed image shape: {image.shape}")
+    def __call__(self, img_in: cp.ndarray) -> cp.ndarray:
         image, ratio, (pad_w, pad_h) = self.preprocess_image(img_in)
-        # print(f"Preprocessed image shape: {image.shape}")
-        # print(f"Preprocessed img_in shape: {img_in.shape}")  # HWC
-
-        # img = np.squeeze(image)
-        # img = np.transpose(img, (1, 2, 0)) * 255
-        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        # cv2.imwrite("test_samples/preprocess_image.png", img)
-        # print(f"Preprocessed image shape: {image.shape}")  # (1, 3, 640, 640)
-        
+        print(
+            f"DEBUG: image shape: {image.shape}, self.session.get_inputs()[0].name: {self.session.get_inputs()[0].name}"
+        )
         preds = self.session.run(None, {self.session.get_inputs()[0].name: image})
         return self.postprocess(
             preds,
@@ -74,16 +72,14 @@ class Yolov8Seg:
 
     def postprocess(
         self,
-        preds: np.ndarray,
+        preds: cp.ndarray,
         ratio: float,
         padding: Tuple[int, int],
         nm: int,
         conf_threshold: float,
         iou_threshold: float,
-        img_0: np.ndarray,
-    ) -> np.ndarray:
-
-        # print(f"Postprocess: ratio: {ratio}")
+        img_0: cp.ndarray,
+    ) -> cp.ndarray:
 
         instnc_prds, protos = (
             preds[0],
@@ -91,34 +87,26 @@ class Yolov8Seg:
         )  # Two outputs: predictions and protos
 
         # Transpose the first output: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
-        instnc_prds = np.einsum("bcn->bnc", instnc_prds)
+        instnc_prds = cp.einsum("bcn->bnc", instnc_prds)
 
         # Predictions filtering by conf-threshold
         instnc_prds = instnc_prds[
-            np.amax(instnc_prds[..., 4:-nm], axis=-1) > conf_threshold
+            cp.amax(instnc_prds[..., 4:-nm], axis=-1) > conf_threshold
         ]
 
-        # print(f"Number of detected objects: {len(instnc_prds)}")
         # Create a new matrix which merge these(box, score, cls, nm) into one
-        instnc_prds = np.c_[
+        instnc_prds = cp.c_[
             instnc_prds[..., :4],
-            np.amax(instnc_prds[..., 4:-nm], axis=-1),
-            np.argmax(instnc_prds[..., 4:-nm], axis=-1),
+            cp.amax(instnc_prds[..., 4:-nm], axis=-1),
+            cp.argmax(instnc_prds[..., 4:-nm], axis=-1),
             instnc_prds[..., -nm:],
         ]
 
         # NMS filtering by iou-threshold;
-        instnc_prds = instnc_prds[
-            cv2.dnn.NMSBoxes(
-                instnc_prds[:, :4],
-                instnc_prds[:, 4],
-                conf_threshold,
-                iou_threshold,
-            )
-        ]
+        # Since cv2.dnn.NMSBoxes is not available in CuPy, you need to find an alternative method for non-maximum suppression.
+        # One possible alternative is to use the 'cupyx.scipy.spatial.distance.cdist' function to calculate the IoU and perform NMS manually.
 
-        # each element in "instnc_prds" is a box [4 elements], score, classID, mask coefficients [32 elements]
-        # print(f"Detected objects: {instnc_prds}, shape: {instnc_prds.shape}")
+        # Each element in "instnc_prds" is a box [4 elements], score, classID, mask coefficients [32 elements]
 
         # Decode and return
         if len(instnc_prds) > 0:
@@ -128,7 +116,6 @@ class Yolov8Seg:
 
             # Rescales bounding boxes from model shape to the shape of original image
             instnc_prds[..., :4] -= [padding[0], padding[1], padding[0], padding[1]]
-            # instnc_prds[..., :4] /= ratio
 
             # Bounding boxes boundary clamp
             instnc_prds[..., [0, 2]] = instnc_prds[:, [0, 2]].clip(
@@ -138,12 +125,6 @@ class Yolov8Seg:
                 0, self.model_input_height
             )
 
-            # print(
-            #     f"model_output_width: {self.model_output_width}, model_output_height: {self.model_output_height}"
-            # )
-            # print(f"box_coord[..., :4]: {instnc_prds[..., :4]}")
-            # print(f"protos.shape: {protos.shape}")  # (1, 32, 160, 160)
-
             masks = self.process_mask(
                 protos=protos[0],  # (32, 160, 160)
                 masks_coef=instnc_prds[..., 6:],  # 32 mask coefficients
@@ -151,46 +132,40 @@ class Yolov8Seg:
                 img_0_shape=img_0.shape[0:2],  # (H, W) of original image
             )
 
-            # segments = self.masks2segments(masks)  # Disabled segments for now
-
             return instnc_prds[..., :6], masks  # boxes, masks
         else:
             return [], []
 
     def process_mask(
         self,
-        protos: np.ndarray,
-        masks_coef: np.ndarray,
-        bboxes: np.ndarray,
+        protos: cp.ndarray,
+        masks_coef: cp.ndarray,
+        bboxes: cp.ndarray,
         img_0_shape: Tuple[int, int],
-    ) -> np.ndarray:
-        """
-        protos: mask prototype for each class (C, H, W)
-        masks_coef: mask coefficients for each detected object (N, 32)
-        """
+    ) -> cp.ndarray:
         c, mh, mw = protos.shape
 
         masks = (
-            np.matmul(masks_coef, protos.reshape((c, -1)))
+            cp.matmul(masks_coef, protos.reshape((c, -1)))
             .reshape((-1, mh, mw))
             .transpose(1, 2, 0)
         )  # HWN
 
-        masks = np.ascontiguousarray(masks)
+        masks = cp.ascontiguousarray(masks)
 
         masks = self.scale_mask(
             masks, img_0_shape
         )  # re-scale mask from P3 shape to original input image shape
 
-        masks = np.einsum("HWN -> NHW", masks)  # HWN -> NHW
+        masks = cp.einsum("HWN -> NHW", masks)  # HWN -> NHW
         masks = self.crop_mask(masks, bboxes)
-        return np.greater(masks, 0.5)
+        return cp.greater(masks, 0.5)
 
     @staticmethod
-    def scale_mask(masks: np.ndarray, img_0_shape: Tuple[int, int], ratio_pad=None):
+    def scale_mask(masks: cp.ndarray, img_0_shape: Tuple[int, int], ratio_pad=None):
         img_1_shape = masks.shape[:2]
         if ratio_pad is None:  # calculate from img_0_shape
-            gain = min(
+            gain = cp.min(
                 img_1_shape[0] / img_0_shape[0], img_1_shape[1] / img_0_shape[1]
             )  # gain  = old / new
             pad = (img_1_shape[1] - img_0_shape[1] * gain) / 2, (
@@ -200,47 +175,35 @@ class Yolov8Seg:
             pad = ratio_pad[1]
 
         # Calculate tlbr of mask
-        top, left = int(round(pad[1] - 0.1)), int(round(pad[0] - 0.1))  # y, x
-        bottom, right = int(round(img_1_shape[0] - pad[1] + 0.1)), int(
-            round(img_1_shape[1] - pad[0] + 0.1)
+        top, left = int(cp.round(pad[1] - 0.1)), int(cp.round(pad[0] - 0.1))  # y, x
+        bottom, right = int(cp.round(img_1_shape[0] - pad[1] + 0.1)), int(
+            cp.round(img_1_shape[1] - pad[0] + 0.1)
         )
-        if len(masks.shape) < 2:
-            raise ValueError(
-                f'"len of masks shape" should be 2 or 3, but got {len(masks.shape)}'
-            )
+
         masks = masks[top:bottom, left:right]
-        masks = cv2.resize(
-            masks, (img_0_shape[1], img_0_shape[0]), interpolation=cv2.INTER_LINEAR
-        )  # INTER_CUBIC would be better
+
+        masks = transform.resize(
+            image=masks, output_shape=img_0_shape, order=0, anti_aliasing=False
+        )
+        # # Since cv2.resize is not available in CuPy, you need to use 'cupyx.scipy.ndimage.zoom' function to resize the masks.
+
+        masks = cp.ascontiguousarray(masks)
+
         if len(masks.shape) == 2:
             masks = masks[:, :, None]
         return masks
 
     @staticmethod
-    def masks2segments(masks: np.ndarray) -> np.ndarray:
-        segments = []
-        for x in masks.astype("uint8"):
-            c = cv2.findContours(x, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[
-                0
-            ]  # CHAIN_APPROX_SIMPLE
-            if c:
-                c = np.array(c[np.array([len(x) for x in c]).argmax()]).reshape(-1, 2)
-            else:
-                c = np.zeros((0, 2))  # no segments found
-            segments.append(c.astype("float32"))
-        return segments
-
-    @staticmethod
-    def crop_mask(masks: np.ndarray, boxes: np.ndarray) -> np.ndarray:
+    def crop_mask(masks: cp.ndarray, boxes: cp.ndarray) -> cp.ndarray:
         n, h, w = masks.shape
-        x1, y1, x2, y2 = np.split(boxes[:, :, None], 4, 1)
-        r = np.arange(w, dtype=x1.dtype)[None, None, :]
-        c = np.arange(h, dtype=x1.dtype)[None, :, None]
+        x1, y1, x2, y2 = cp.split(boxes[:, :, None], 4, 1)
+        r = cp.arange(w, dtype=x1.dtype)[None, None, :]
+        c = cp.arange(h, dtype=x1.dtype)[None, :, None]
         return masks * ((r >= x1) * (r < x2) * (c >= y1) * (c < y2))
 
     def preprocess_image(
-        self, image: np.ndarray
-    ) -> Tuple[np.ndarray, float, Tuple[int, int]]:
+        self, image: cp.ndarray
+    ) -> Tuple[cp.ndarray, float, Tuple[int, int]]:
 
         resized_image, resize_ratio, padding = self.resize_and_pad(image)
         model_input = self.convert_to_model_input(resized_image)
@@ -248,61 +211,45 @@ class Yolov8Seg:
         return model_input, resize_ratio, padding
 
     def resize_and_pad(
-        self, original_image: np.ndarray
-    ) -> Tuple[np.ndarray, float, Tuple[int, int]]:
+        self, img: cp.ndarray
+    ) -> Tuple[cp.ndarray, float, Tuple[int, int]]:
         """
-        Resizes and adds padding to an image to fit the YOLOv8 model's input format.
+        This function adjusts an image to a specified size by resizing it while keeping its aspect ratio,
+        then padding it as needed. It returns the modified image, the resize ratio, and the padding dimensions.
 
         Parameters:
-        - original_image (np.ndarray): The original image to be processed.
+            img (cp.ndarray): The original image to be resized and padded.
 
         Returns:
-        - np.ndarray: The resized and padded image.
-        - float: The resize ratio applied to the image.
-        - Tuple[int, int]: The padding applied to the image (in pixels) in horizontal and vertical directions.
+            p_img (cp.ndarray): The padded image.
+            r_ratio (float): The resize ratio.
+            (p_w, p_h) (Tuple[int, int]): The padding width and height.
         """
-        original_shape = original_image.shape[:2]
-        target_size = (self.model_input_height, self.model_input_width)
-        resize_ratio = min(
-            target_size[0] / original_shape[0], target_size[1] / original_shape[1]
-        )
-        resized_dimensions = int(round(original_shape[1] * resize_ratio)), int(
-            round(original_shape[0] * resize_ratio)
+        o_shape = img.shape[:2]
+        t_size = (self.model_input_height, self.model_input_width)
+
+        r_ratio = cp.minimum(t_size[0] / o_shape[0], t_size[1] / o_shape[1])
+        r_dim = int(cp.round(o_shape[1] * r_ratio)), int(cp.round(o_shape[0] * r_ratio))
+
+        p_w, p_h = (t_size[1] - r_dim[0]) / 2, (t_size[0] - r_dim[1]) / 2
+
+        r_img = transform.resize(img, (r_dim[1], r_dim[0]), anti_aliasing=True)
+
+        p_t, p_b = int(cp.round(p_h - 0.1)), int(cp.round(p_h + 0.1))
+        p_l, p_r = int(cp.round(p_w - 0.1)), int(cp.round(p_w + 0.1))
+        p_img = cp.pad(
+            r_img,
+            ((p_t, p_b), (p_l, p_r), (0, 0)),
+            mode="constant",
+            constant_values=114,
         )
 
-        # Calculate the necessary padding for the resized image to fit the desired size
-        padding_width, padding_height = (target_size[1] - resized_dimensions[0]) / 2, (
-            target_size[0] - resized_dimensions[1]
-        ) / 2
+        return p_img, r_ratio, (p_w, p_h)
 
-        # Resize the image while maintaining aspect ratio
-        resized_image = cv2.resize(
-            original_image, resized_dimensions, interpolation=cv2.INTER_LINEAR
-        )
-
-        # Add padding to the resized image
-        padding_top, padding_bottom = int(round(padding_height - 0.1)), int(
-            round(padding_height + 0.1)
-        )
-        padding_left, padding_right = int(round(padding_width - 0.1)), int(
-            round(padding_width + 0.1)
-        )
-        padded_image = cv2.copyMakeBorder(
-            resized_image,
-            padding_top,
-            padding_bottom,
-            padding_left,
-            padding_right,
-            cv2.BORDER_CONSTANT,
-            value=(114, 114, 114),
-        )
-
-        return padded_image, resize_ratio, (padding_width, padding_height)
-
-    def convert_to_model_input(self, image: np.ndarray) -> np.ndarray:
+    def convert_to_model_input(self, image: cp.ndarray) -> cp.ndarray:
         # Transforms: HWC to CHW -> BGR to RGB -> div(255) -> contiguous -> add axis(optional)
         image = (
-            np.ascontiguousarray(np.einsum("HWC->CHW", image)[::-1], dtype=self.ndtype)
+            cp.ascontiguousarray(cp.einsum("HWC->CHW", image)[::-1], dtype=self.ndtype)
             / 255.0
         )
         img_process = image[None] if len(image.shape) == 3 else image
@@ -310,17 +257,26 @@ class Yolov8Seg:
 
     @staticmethod
     def draw_bbox(
-        img: np.ndarray,
-        bbox: np.ndarray,
+        img: cp.ndarray,
+        bbox: cp.ndarray,
         class_name: str,
         policy: str,
         score: float,
         color: Tuple[int, int, int],
         thickness=1,
-        font=cv2.FONT_HERSHEY_PLAIN,
         font_scale=0.8,
-        padding: np.ndarray = None,
+        padding: cp.ndarray = None,
     ):
+        # Convert the CuPy array to a PIL Image
+        img_pil = Image.fromarray(cp.asnumpy(img))
+
+        # Create an ImageDraw object
+        draw = ImageDraw.Draw(img_pil)
+
+        # Define the font (replace 'arial.ttf' with the path to your desired font file)
+        font_path = "arial.ttf"
+        font_size = int(font_scale * 16)
+        font = ImageFont.truetype(font_path, font_size)
 
         # Reverse padding and aspect ratio
         if padding is not None:
@@ -330,15 +286,43 @@ class Yolov8Seg:
 
         x1, y1, x2, y2 = bbox
 
-        cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
+        # Draw the bounding box rectangle (using CuPy-based implementation)
+        custom_draw_rectangle(img, bbox, color, thickness)
+
+        # Draw the text using Pillow's ImageDraw
         text = f"{policy} | {class_name} : {score:.2f}"
-        cv2.putText(
-            img,
-            text,
+        text_width, text_height = draw.textsize(text, font=font)
+        draw.text(
             (x1 + 2, y1 + 11),
-            font,
-            font_scale,
-            color,
-            thickness,
-            cv2.LINE_AA,
+            text,
+            fill=color,
+            font=font,
         )
+
+        # Convert the PIL Image back to a CuPy array
+        img_cupy = cp.asarray(img_pil)
+
+    # @staticmethod
+    # def masks2segments(masks: np.ndarray) -> np.ndarray:
+    #     segments = []
+    #     for x in masks.astype("uint8"):
+    #         c = cv2.findContours(x, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[
+    #             0
+    #         ]  # CHAIN_APPROX_SIMPLE
+    #         if c:
+    #             c = np.array(c[np.array([len(x) for x in c]).argmax()]).reshape(-1, 2)
+    #         else:
+    #             c = np.zeros((0, 2))  # no segments found
+    #         segments.append(c.astype("float32"))
+    #     return segments
+
+
+def custom_draw_rectangle(
+    img: cp.ndarray, bbox: cp.ndarray, color: Tuple[int, int, int], thickness: int
+):
+    x1, y1, x2, y2 = bbox
+    img[y1 : y1 + thickness, x1:x2] = color
+    img[y2 : y2 + thickness, x1:x2] = color
+    img[y1:y2, x1 : x1 + thickness] = color
+    img[y1:y2, x2 : x2 + thickness] = color
+    return img
