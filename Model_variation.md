@@ -1,4 +1,3 @@
-I've corrected the markdown table and made the diagram visible and nice in markdown. Here is the updated version:
 
 **Model Comparison**
 | **Model** | **Processing Location** | **Data Sent to Server** | **Obfuscation Location** | **Latency Concerns** | **Accuracy Potential** |
@@ -18,7 +17,7 @@ The proposed system, dubbed "ARShield," consists of the following components:
 **ARShield Architecture**
 
 ```mermaid
-graph LR
+graph LR;
   EdgeDevice((Edge Device))
   ObjectDetection((Object Detection))
   SFP((Selective Frame Processing (SFP)))
@@ -31,19 +30,18 @@ graph LR
   ARApplication((AR Application))
   RenderObfuscatedObjects((Render Obfuscated Objects))
 
-  EdgeDevice --> ObjectDetection
-  ObjectDetection --> SFP
-  SFP --> WebRTC
-  WebRTC --> Server
-  Server --> Segmentation
+  EdgeDevice --> ObjectDetection;
+  ObjectDetection --> SFP;
+  SFP --> WebRTC;
+  WebRTC --> Server;
+  Server --> Segmentation;
   Segmentation --> SOR
-  SOR --> Caching
-  Caching --> ObfuscatedObjectReturn
-  ObfuscatedObjectReturn --> ARApplication
-  ARApplication --> RenderObfuscatedObjects
+  SOR --> Caching;
+  Caching --> ObfuscatedObjectReturn;
+  ObfuscatedObjectReturn --> ARApplication;
+  ARApplication --> RenderObfuscatedObjects;
 ```
 
-This architecture combines the strengths of edge computing, cloud computing, and optimized communication protocols to achieve low-latency object detection, segmentation, and obfuscation for AR applications.
 
 **Metrics**
 
