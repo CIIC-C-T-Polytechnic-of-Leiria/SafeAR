@@ -67,14 +67,14 @@ class Yolov8Seg:
 
     def __call__(self, img_in: cp.ndarray) -> cp.ndarray:
         img, ratio, (pad_w, pad_h) = self.preprocess_img(img_in)
-        print(
-            f"DEBUG: img shape: {img.shape}, self.session.get_inputs()[0].name: {self.session.get_inputs()[0].name}"
-        )
+        # print(
+        #     f"DEBUG: img shape: {img.shape}, self.session.get_inputs()[0].name: {self.session.get_inputs()[0].name}"
+        # )
         preds = self.session.run(
             None, {self.session.get_inputs()[0].name: cp.asnumpy(img)}
         )
 
-        print(f"DEBUG: preds type: {type(preds)}")
+        # print(f"DEBUG: preds type: {type(preds)}")
         return self.postprocess_img(
             preds,
             ratio,
@@ -103,19 +103,20 @@ class Yolov8Seg:
             cp.asarray(preds[1]),  # protos masks of dim. = (32, 160, 160)
         )
 
-        print(
-            f"DEBUG: instnc_prds shape: {instnc_prds.shape}, protos shape: {protos.shape}"
-        )
+        # print(
+        #     f"DEBUG: instnc_prds shape: {instnc_prds.shape}, protos shape: {protos.shape}"
+        # )
 
         # Transpose predictions: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
         instnc_prds = cp.einsum("bcn->bnc", instnc_prds)
 
         # DEBUG: Print the probability array
-        prob_array = cp.asnumpy(instnc_prds[..., 4:-nm])
-        print(f"prob array: {np.array2string(prob_array, precision=1)}")
+        # prob_array = cp.asnumpy(instnc_prds[..., 4:-nm])
+        # print(f"prob array: {np.array2string(prob_array, precision=1)}")
 
         # Apply NMS
         instnc_prds = apply_nms(instnc_prds, conf_threshold, nm, iou_threshold)
+        print(f"len(instnc_prds): {len(instnc_prds)}")
 
         # Decode and return
         if len(instnc_prds) > 0:
@@ -136,6 +137,7 @@ class Yolov8Seg:
                 bboxes=instnc_prds[..., :4],  # boxes shape: (N, 4)
                 img_0_shape=img_0.shape[0:2],  # (H, W) of original image
             )
+            print(f"DEBUG: instnc_prds[..., :6]: {instnc_prds[..., :6]}")
 
             return instnc_prds[..., :6], masks  # boxes, masks
         else:
@@ -402,5 +404,8 @@ def apply_nms(
 
         # If IoU is greater than the threshold, remove the box
         instnc_prds = instnc_prds[ious < iou_threshold]
+
+    if len(boxes) == 0:
+        return cp.array([])
 
     return cp.stack(boxes)

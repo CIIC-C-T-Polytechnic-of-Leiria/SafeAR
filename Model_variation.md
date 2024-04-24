@@ -16,36 +16,22 @@ The proposed system, dubbed "ARShield," consists of the following components:
 
 **ARShield Architecture**
 
-```mermaid
-graph LR;
-  EdgeDevice((Edge Device))
-  ObjectDetection((Object Detection))
-  SFP((Selective Frame Processing (SFP)))
-  WebRTC((WebRTC-based Communication Protocol))
-  Server((Server))
-  Segmentation((Segmentation (Mask R-CNN, U-Net)))
-  SOR((Secure Object Representation (SOR)))
-  Caching((Caching Mechanism))
-  ObfuscatedObjectReturn((Obfuscated Object Return))
-  ARApplication((AR Application))
-  RenderObfuscatedObjects((Render Obfuscated Objects))
-
-  EdgeDevice --> ObjectDetection;
-  ObjectDetection --> SFP;
-  SFP --> WebRTC;
-  WebRTC --> Server;
-  Server --> Segmentation;
-  Segmentation --> SOR
-  SOR --> Caching;
-  Caching --> ObfuscatedObjectReturn;
-  ObfuscatedObjectReturn --> ARApplication;
-  ARApplication --> RenderObfuscatedObjects;
-```
-
+<span style="color: #87CEEB">**Edge Device**</span>
+↪ <span style="color: #FFC107">**Object Detection**</span>
+  ↪ <span style="color: #F7DC6F">**Selective Frame Processing (SFP)**</span>
+    ↪ <span style="color: #8BC34A">**WebRTC-based Communication Protocol**</span>
+      ↪ <span style="color: #9C27B0">**Server**</span>
+        ↪ <span style="color: #66D9EF">**Segmentation (Mask R-CNN, U-Net)**</span>
+          ↪ <span style="color: #B3E5FC">**Secure Object Representation (SOR)**</span>
+            ↪ <span style="color: #E5E5EA">**Caching Mechanism**</span>
+              ↪ <span style="color: #9E9E9E">**Obfuscated Object Return**</span>
+                ↩ <span style="color: #87CEEB">**Edge Device**</span>
+                  ↪ <span style="color: #FFC107">**AR Application**</span>
+                    ↪ <span style="color: #F7DC6F">**Render Obfuscated Objects**</span>
 
 **Metrics**
 
-
+List of possible
 
 | **Metric** | **Description** | **Unit** |
 | --- | --- | --- |

@@ -90,6 +90,8 @@ def main(
         boxes, masks = model(frame)
         if len(boxes) > 0:
             print(f"DEBUG: boxes: {boxes}, masks.shape: {masks.shape}")
+        
+        
 
 
         # frame = obfuscator.obfuscate(
