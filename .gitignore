@@ -27,6 +27,7 @@ lib64/
 
 # files to ignore
 img_source_test.py
+test.ipynb
 
 # folders to ignore
 /backup_cv2
@@ -39,4 +40,5 @@ img_source_test.py
 *.prof
 *.deb
 *.pyc
+*.log
 

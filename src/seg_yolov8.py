@@ -1,4 +1,5 @@
 import cupy as cp
+import numpy as np
 import onnxruntime as ort
 from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
@@ -24,19 +25,29 @@ class Yolov8Seg:
         self.iou_threshold = iou_threshold
         self.num_masks = num_masks
 
-        self.session = ort.InferenceSession(
-            self.model_path,
-            providers=["CPUExecutionProvider"],
-        )
-
         # self.session = ort.InferenceSession(
         #     self.model_path,
-        #     providers=(
-        #         ["CUDAExecutionProvider", "CPUExecutionProvider"]
-        #         if ort.get_device() == "GPU"
-        #         else ["CPUExecutionProvider"]
-        #     ),
+        #     providers=["CPUExecutionProvider"],
         # )
+
+        options = ort.SessionOptions()
+        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        options.intra_op_num_threads = 1
+        options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+        options.log_severity_level = 4
+        options.enable_profiling = False
+
+        exec_provid = (
+            ["CUDAExecutionProvider", "CPUExecutionProvider"]
+            if ort.get_device() == "GPU"
+            else ["CPUExecutionProvider"]
+        )
+
+        self.session = ort.InferenceSession(
+            self.model_path,
+            sess_options=options,
+            providers=exec_provid,
+        )
 
         print(f"Yolov8Seg: Model Using {ort.get_device()} for inference")
 
@@ -55,12 +66,16 @@ class Yolov8Seg:
         ][0][-2:]
 
     def __call__(self, img_in: cp.ndarray) -> cp.ndarray:
-        image, ratio, (pad_w, pad_h) = self.preprocess_image(img_in)
+        img, ratio, (pad_w, pad_h) = self.preprocess_img(img_in)
         print(
-            f"DEBUG: image shape: {image.shape}, self.session.get_inputs()[0].name: {self.session.get_inputs()[0].name}"
+            f"DEBUG: img shape: {img.shape}, self.session.get_inputs()[0].name: {self.session.get_inputs()[0].name}"
         )
-        preds = self.session.run(None, {self.session.get_inputs()[0].name: image})
-        return self.postprocess(
+        preds = self.session.run(
+            None, {self.session.get_inputs()[0].name: cp.asnumpy(img)}
+        )
+
+        print(f"DEBUG: preds type: {type(preds)}")
+        return self.postprocess_img(
             preds,
             ratio,
             (pad_w, pad_h),
@@ -70,9 +85,9 @@ class Yolov8Seg:
             img_in,
         )
 
-    def postprocess(
+    def postprocess_img(
         self,
-        preds: cp.ndarray,
+        preds: list,
         ratio: float,
         padding: Tuple[int, int],
         nm: int,
@@ -82,38 +97,28 @@ class Yolov8Seg:
     ) -> cp.ndarray:
 
         instnc_prds, protos = (
-            preds[0],
-            preds[1],
-        )  # Two outputs: predictions and protos
+            cp.asarray(
+                preds[0]
+            ),  # predictions (boxes, scores, classes, masks coefficients)
+            cp.asarray(preds[1]),  # protos masks of dim. = (32, 160, 160)
+        )
 
-        # Transpose the first output: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
+        print(
+            f"DEBUG: instnc_prds shape: {instnc_prds.shape}, protos shape: {protos.shape}"
+        )
+
+        # Transpose predictions: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
         instnc_prds = cp.einsum("bcn->bnc", instnc_prds)
 
-        # Predictions filtering by conf-threshold
-        instnc_prds = instnc_prds[
-            cp.amax(instnc_prds[..., 4:-nm], axis=-1) > conf_threshold
-        ]
+        # DEBUG: Print the probability array
+        prob_array = cp.asnumpy(instnc_prds[..., 4:-nm])
+        print(f"prob array: {np.array2string(prob_array, precision=1)}")
 
-        # Create a new matrix which merge these(box, score, cls, nm) into one
-        instnc_prds = cp.c_[
-            instnc_prds[..., :4],
-            cp.amax(instnc_prds[..., 4:-nm], axis=-1),
-            cp.argmax(instnc_prds[..., 4:-nm], axis=-1),
-            instnc_prds[..., -nm:],
-        ]
-
-        # NMS filtering by iou-threshold;
-        # Since cv2.dnn.NMSBoxes is not available in CuPy, you need to find an alternative method for non-maximum suppression.
-        # One possible alternative is to use the 'cupyx.scipy.spatial.distance.cdist' function to calculate the IoU and perform NMS manually.
-
-        # Each element in "instnc_prds" is a box [4 elements], score, classID, mask coefficients [32 elements]
+        # Apply NMS
+        instnc_prds = apply_nms(instnc_prds, conf_threshold, nm, iou_threshold)
 
         # Decode and return
         if len(instnc_prds) > 0:
-            # Bounding boxes format change: cxcywh -> xyxy
-            instnc_prds[..., [0, 1]] -= instnc_prds[..., [2, 3]] / 2
-            instnc_prds[..., [2, 3]] += instnc_prds[..., [0, 1]]
-
             # Rescales bounding boxes from model shape to the shape of original image
             instnc_prds[..., :4] -= [padding[0], padding[1], padding[0], padding[1]]
 
@@ -201,14 +206,14 @@ class Yolov8Seg:
         c = cp.arange(h, dtype=x1.dtype)[None, :, None]
         return masks * ((r >= x1) * (r < x2) * (c >= y1) * (c < y2))
 
-    def preprocess_image(
-        self, image: cp.ndarray
-    ) -> Tuple[cp.ndarray, float, Tuple[int, int]]:
+    def preprocess_img(
+        self, img: cp.ndarray
+    ) -> Tuple[np.ndarray, float, Tuple[int, int]]:
 
-        resized_image, resize_ratio, padding = self.resize_and_pad(image)
-        model_input = self.convert_to_model_input(resized_image)
+        resized_img, resize_ratio, padding = self.resize_and_pad(img)
+        model_in_img = self.convert_to_model_input(resized_img)
 
-        return model_input, resize_ratio, padding
+        return model_in_img, resize_ratio, padding
 
     def resize_and_pad(
         self, img: cp.ndarray
@@ -326,3 +331,76 @@ def custom_draw_rectangle(
     img[y1:y2, x1 : x1 + thickness] = color
     img[y1:y2, x2 : x2 + thickness] = color
     return img
+
+
+def calculate_iou(box1: cp.ndarray, box2: cp.ndarray, epsilon=1e-9) -> cp.ndarray:
+    """
+    Calculate Intersection over Union (IoU) of two bounding boxes.
+
+    Parameters:
+    box1, box2 (cp.ndarray): Bounding boxes in format x1,y1,x2,y2.
+    epsilon (float): Small constant to prevent division by zero.
+
+    Returns:
+    iou (cp.ndarray): IoU of box1 and box2.
+    """
+    x1, y1 = cp.maximum(box1[:2], box2[..., :2])
+    x2, y2 = cp.minimum(box1[2:], box2[..., 2:])
+    inter_area = cp.maximum(0, x2 - x1 + 1) * cp.maximum(0, y2 - y1 + 1)
+    box1_area = (box1[2] - box1[0] + 1) * (box1[3] - box1[1] + 1)
+    box2_area = (box2[..., 2] - box2[..., 0] + 1) * (box2[..., 3] - box2[..., 1] + 1)
+    return inter_area / (box1_area + box2_area - inter_area + epsilon)
+
+
+def apply_nms(
+    instnc_prds: cp.ndarray, conf_threshold: float, nm: int, iou_threshold: float
+) -> cp.ndarray:
+    """
+    Apply Non-Maximum Suppression (NMS) and convert bounding box format.
+
+    Parameters:
+    instnc_prds (cp.ndarray): Instance predictions.
+    conf_threshold (float): Confidence threshold for filtering.
+    nm (int): Number of mask coefficients.
+    iou_threshold (float): IoU threshold for NMS.
+
+    Returns:
+    instnc_prds (cp.ndarray): Filtered and NMS applied instance predictions.
+    """
+    # Predictions filtering by conf-threshold
+    instnc_prds = instnc_prds[
+        cp.amax(instnc_prds[..., 4:-nm], axis=-1) > conf_threshold
+    ]
+
+    instnc_prds = cp.c_[
+        instnc_prds[..., :4],
+        cp.amax(instnc_prds[..., 4:-nm], axis=-1),
+        cp.argmax(instnc_prds[..., 4:-nm], axis=-1),
+        instnc_prds[..., -nm:],
+    ]
+
+    # Sort by confidence score (index 4) in descending order
+    instnc_prds = instnc_prds[instnc_prds[:, 4].argsort()[::-1]]
+
+    # Bounding boxes format change: cxcywh -> xyxy
+    center = instnc_prds[..., [0, 1]].copy()
+    instnc_prds[..., [0, 1]] -= instnc_prds[..., [2, 3]] / 2  # x1, y1
+    instnc_prds[..., [2, 3]] = center + instnc_prds[..., [2, 3]] / 2  # x2, y2
+
+    boxes = []
+
+    while len(instnc_prds) > 0:
+        boxes.append(instnc_prds[0])
+        if len(instnc_prds) == 1:
+            break
+
+        # remove the first box
+        instnc_prds = instnc_prds[1:]
+
+        # For all remaining boxes, calculate IoU with the first box
+        ious = calculate_iou(boxes[-1][:4], instnc_prds[:, :4])
+
+        # If IoU is greater than the threshold, remove the box
+        instnc_prds = instnc_prds[ious < iou_threshold]
+
+    return cp.stack(boxes)

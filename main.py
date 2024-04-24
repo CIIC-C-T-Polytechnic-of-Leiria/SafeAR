@@ -33,25 +33,26 @@ from src.obfuscator import Colors
 # Testing imports
 import imageio
 import cupy as cp
+import numpy as np
 
 
-def load_config():
+def load_config() -> dict:
     with open("config.yml", "r") as file:
         config = yaml.safe_load(file)
     return config
 
 
-def list_models(config):
+def list_models(config: dict):
     print("Available models:")
     models = list(config["models"].keys())
     for i, model in enumerate(models, start=1):
         print(f"    [{i}] - {model}")
 
 
-
-def read_image_as_cupy_array(image_path):
+def read_image(image_path: str) -> cp.ndarray:
     image = imageio.imread(image_path)
     return cp.asarray(image)
+
 
 def main(
     model_number: int,
@@ -69,9 +70,9 @@ def main(
 
     model = Yolov8Seg(model_path=model_config["model_path"])
 
-    camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
+    # camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
 
-    frame = read_image_as_cupy_array("test_samples/images/cars.jpg")
+    frame = read_image("test_samples/images/cars.jpg")
 
     colors = Colors(model_config["num_classes"])
     colors_dict = colors.get_colors_dict()
@@ -87,16 +88,18 @@ def main(
             break
 
         boxes, masks = model(frame)
+        if len(boxes) > 0:
+            print(f"DEBUG: boxes: {boxes}, masks.shape: {masks.shape}")
 
-        frame = obfuscator.obfuscate(
-            masks=masks,
-            image=frame,
-            class_ids=[int(box[5]) for box in boxes],
-        )
 
-        # save the processed frame
-        imageio.imwrite("test_samples/images/cars_processed.jpg", frame.get())
+        # frame = obfuscator.obfuscate(
+        #     masks=masks,
+        #     image=frame,
+        #     class_ids=[int(box[5]) for box in boxes],
+        # )
 
+        # # save the processed frame
+        # imageio.imwrite("test_samples/images/cars_processed.jpg", frame.get())
 
     # while True:
     #     frame = camera.get_frame()
@@ -161,6 +164,7 @@ if __name__ == "__main__":
         default=0,
         help="Image source, can be a number or a path. Default is 0.",
     )
+
     parser.add_argument(
         "--show_fps",
         action="store_true",

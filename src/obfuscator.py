@@ -64,6 +64,7 @@ class ImageObfuscator:
         return final_image
 
     def obfuscate(self, masks: cp.ndarray, image: cp.ndarray, class_ids: list):
+        
         self.validate_inputs(masks, image)
 
         for mask, class_id in zip(masks, class_ids):
