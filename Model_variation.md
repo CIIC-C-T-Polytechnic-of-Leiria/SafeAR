@@ -19,15 +19,28 @@ The proposed system, dubbed "ARShield," consists of the following components:
 
 ```mermaid
 graph LR
-    A[Edge Device] -->|Object Detection|> B
-    B -->|Selective Frame Processing (SFP)|> C
-    C -->|WebRTC-based Communication Protocol|> D[Server]
-    D -->|Segmentation (Mask R-CNN, U-Net)|> E
-    E -->|Secure Object Representation (SOR)|> F
-    F -->|Caching Mechanism|> G
-    G -->|Obfuscated Object Return|> H[Edge Device]
-    H -->|AR Application|> I
-    I -->|Render Obfuscated Objects|> J
+  EdgeDevice[Edge Device]
+  ObjectDetection[Object Detection]
+  SFP[Selective Frame Processing (SFP)]
+  WebRTC[WebRTC-based Communication Protocol]
+  Server[Server]
+  Segmentation[Segmentation (Mask R-CNN, U-Net)]
+  SOR[Secure Object Representation (SOR)]
+  Caching[Caching Mechanism]
+  ObfuscatedObjectReturn[Obfuscated Object Return]
+  ARApplication[AR Application]
+  RenderObfuscatedObjects[Render Obfuscated Objects]
+
+  EdgeDevice --> ObjectDetection
+  ObjectDetection --> SFP
+  SFP --> WebRTC
+  WebRTC --> Server
+  Server --> Segmentation
+  Segmentation --> SOR
+  SOR --> Caching
+  Caching --> ObfuscatedObjectReturn
+  ObfuscatedObjectReturn --> ARApplication
+  ARApplication --> RenderObfuscatedObjects
 ```
 
 This architecture combines the strengths of edge computing, cloud computing, and optimized communication protocols to achieve low-latency object detection, segmentation, and obfuscation for AR applications.
