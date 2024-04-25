@@ -5,6 +5,8 @@ from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
 from cucim.skimage import transform
 
+# Debugging
+import matplotlib.pyplot as plt
 
 class Yolov8Seg:
     def __init__(
@@ -67,14 +69,26 @@ class Yolov8Seg:
 
     def __call__(self, img_in: cp.ndarray) -> cp.ndarray:
         img, ratio, (pad_w, pad_h) = self.preprocess_img(img_in)
-        # print(
-        #     f"DEBUG: img shape: {img.shape}, self.session.get_inputs()[0].name: {self.session.get_inputs()[0].name}"
-        # )
+
+        print(
+            f"DEBUG: img shape: {img.shape}, img type: {img.dtype}, max: {cp.max(img)}, min: {cp.min(img)}"
+        )
+
         preds = self.session.run(
             None, {self.session.get_inputs()[0].name: cp.asnumpy(img)}
         )
 
+        # ------ DEBUG: save img to disk ----------------------------
+        # Discard the batch dimension in img array (BCHW -> CHW)
+        img = cp.squeeze(img, axis=0)
+        # Invert CHW to HWC
+        img = cp.einsum("CHW->HWC", img)
+        # Convert to uint8 and 0-255 range
+        img = (img * 255.0).astype("uint8")
+        plt.imsave("img_after_processing.png", cp.asnumpy(img))
         # print(f"DEBUG: preds type: {type(preds)}")
+        # ------------------------------------------------------------
+
         return self.postprocess_img(
             preds,
             ratio,
@@ -103,6 +117,7 @@ class Yolov8Seg:
             cp.asarray(preds[1]),  # protos masks of dim. = (32, 160, 160)
         )
 
+
         # print(
         #     f"DEBUG: instnc_prds shape: {instnc_prds.shape}, protos shape: {protos.shape}"
         # )
@@ -110,9 +125,11 @@ class Yolov8Seg:
         # Transpose predictions: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
         instnc_prds = cp.einsum("bcn->bnc", instnc_prds)
 
+        # ------ DEBUG: Print the prediction array ----------------------------
         # DEBUG: Print the probability array
         # prob_array = cp.asnumpy(instnc_prds[..., 4:-nm])
         # print(f"prob array: {np.array2string(prob_array, precision=1)}")
+        # ---------------------------------------------------------------------
 
         # Apply NMS
         instnc_prds = apply_nms(instnc_prds, conf_threshold, nm, iou_threshold)
@@ -132,14 +149,14 @@ class Yolov8Seg:
             )
 
             masks = self.process_mask(
-                protos=protos[0],  # (32, 160, 160)
+                protos=protos[0],                 # (32, 160, 160)
                 masks_coef=instnc_prds[..., 6:],  # 32 mask coefficients
-                bboxes=instnc_prds[..., :4],  # boxes shape: (N, 4)
-                img_0_shape=img_0.shape[0:2],  # (H, W) of original image
+                bboxes=instnc_prds[..., :4],      # boxes shape: (N, 4)
+                img_0_shape=img_0.shape[0:2],     # (H, W) of original image
             )
             print(f"DEBUG: instnc_prds[..., :6]: {instnc_prds[..., :6]}")
 
-            return instnc_prds[..., :6], masks  # boxes, masks
+            return instnc_prds[..., :6], masks   # boxes, masks
         else:
             return [], []
 
@@ -210,10 +227,29 @@ class Yolov8Seg:
 
     def preprocess_img(
         self, img: cp.ndarray
-    ) -> Tuple[np.ndarray, float, Tuple[int, int]]:
+    ) -> Tuple[cp.ndarray, float, Tuple[int, int]]:
 
         resized_img, resize_ratio, padding = self.resize_and_pad(img)
-        model_in_img = self.convert_to_model_input(resized_img)
+        # ------ DEBUG: save resized_img to disk ----------------------------
+        print(
+            f"DEBUG: resized_img shape: {resized_img.shape}, max: {cp.max(resized_img)}, min: {cp.min(resized_img)}"
+        )
+        img_to_save = cp.einsum("CHW->HWC", resized_img) * 255.0
+        img_to_save = cp.asnumpy(img_to_save).astype("uint8")
+        plt.imsave(f"resized_img{np.random.randint(10)}.png", img_to_save)
+        # ---------------------------------------------------------------------
+
+        model_in_img = self.convert_to_yolov8_input(resized_img)
+
+        # ------ DEBUG: save model_in_img to disk ----------------------------
+
+        print(
+            f"DEBUG: model_in_img shape: {model_in_img.shape}, max: {cp.max(model_in_img)}, min: {cp.min(model_in_img)}"
+        )
+        img_to_save = cp.einsum("CHW->HWC", model_in_img[0, :, :, ::-1]) * 255.0
+        img_to_save = cp.asnumpy(img_to_save).astype("uint8")
+        plt.imsave(f"model_in_img{np.random.randint(10)}.png", img_to_save)
+        # ---------------------------------------------------------------------
 
         return model_in_img, resize_ratio, padding
 
@@ -248,19 +284,20 @@ class Yolov8Seg:
             r_img,
             ((p_t, p_b), (p_l, p_r), (0, 0)),
             mode="constant",
-            constant_values=114,
+            constant_values=0.8,
         )
 
         return p_img, r_ratio, (p_w, p_h)
 
-    def convert_to_model_input(self, image: cp.ndarray) -> cp.ndarray:
-        # Transforms: HWC to CHW -> BGR to RGB -> div(255) -> contiguous -> add axis(optional)
-        image = (
-            cp.ascontiguousarray(cp.einsum("HWC->CHW", image)[::-1], dtype=self.ndtype)
-            / 255.0
-        )
-        img_process = image[None] if len(image.shape) == 3 else image
-        return img_process
+    def convert_to_yolov8_input(self, img: cp.ndarray) -> cp.ndarray:
+        """
+        Transforms: HWC to CHW -> div(255) -> contiguous -> CHW to BCHW
+        """
+        img = cp.einsum("HWC->CHW", img[:, :, ::-1]) / 255.0
+        img = cp.ascontiguousarray(img, dtype=self.ndtype)
+        img = cp.expand_dims(img, axis=0) if len(img.shape) == 3 else img
+
+        return img
 
     @staticmethod
     def draw_bbox(

@@ -87,12 +87,13 @@ def main(
         if frame is None:
             break
 
+        # save frame to file
+        imageio.imwrite("frame_in.jpg", frame.get())
+        print(f"DEBUG: frame shape: {frame.shape}, max: {frame.max()}, min: {frame.min()}") # 0-255
+
         boxes, masks = model(frame)
         if len(boxes) > 0:
             print(f"DEBUG: boxes: {boxes}, masks.shape: {masks.shape}")
-        
-        
-
 
         # frame = obfuscator.obfuscate(
         #     masks=masks,
