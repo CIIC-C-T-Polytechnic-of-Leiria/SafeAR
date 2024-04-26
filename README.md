@@ -184,7 +184,8 @@ python main.py \
 ```
 
 This will use the first available model to obfuscate objects with class IDs 0, 1, and 2 in the video stream from the
-default camera, using the `bluring`, `masking`, and `pixelation` obfuscation types, and showing the frames per second on
+default camera, using the `blurring`, `masking`, and `pixelation` obfuscation types, and showing the frames per second
+on
 the screen.
 
 ### Python Library Usage

@@ -38,6 +38,7 @@ img_after_processing.png
 
 # folders to ignore
 /backup_cv2
+/outputs
 
 # file types to ignore
 *.mp4

@@ -3,6 +3,7 @@ This module contains the ImageObfuscator class, which is used to obfuscate
 images based on a set of masks and policies.
 """
 
+# TODO: Verify is GPu is being used in all operations
 import cupy as cp
 import yaml
 from cucim.skimage import transform
@@ -35,18 +36,36 @@ class ImageObfuscator:
             if policy not in self.available_policies:
                 raise ValueError(f"Unknown policy: {policy}")
 
+    import cupy as cp
+
     @staticmethod
     def apply_mask(image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
-        print(f"DEBUG: ap image type: {type(image)}, mask type: {type(mask)}")
-        mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
-        inverse_mask = cp.logical_not(mask)
-        print(
-            f"DEBUG: inverse_mask type: {type(inverse_mask)}, image type: {type(image)}"
-        )
-        masked_image = cp.where(
-            inverse_mask, image, cp.array(0)
-        )  # set masked area to 0
-        return cp.asarray(masked_image.get())
+        # Assuming mask is already boolean
+        cp.putmask(image, ~mask, 0)  # set masked area to 0 in-place
+        return image
+
+    # @staticmethod
+    # def apply_mask(image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
+    #     """
+    #     Applies a mask to an image, obfuscating the masked area.
+    #
+    #     Args:
+    #         image (cp.ndarray): Image to be obfuscated
+    #         mask (cp.ndarray): Mask to be applied to the image
+    #
+    #     Returns:
+    #         cp.ndarray: Obfuscated image
+    #     """
+    #     # print(f"DEBUG: ap image type: {type(image)}, mask type: {type(mask)}")
+    #     mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
+    #     inverse_mask = cp.logical_not(mask)
+    #     # print(
+    #     #     f"DEBUG: inverse_mask type: {type(inverse_mask)}, image type: {type(image)}"
+    #     # )
+    #     masked_image = cp.where(
+    #         inverse_mask, image, cp.array(0)
+    #     )  # set masked area to 0
+    #     return cp.asarray(masked_image.get())
 
     @staticmethod
     def apply_blur(image: cp.ndarray, mask: cp.ndarray):

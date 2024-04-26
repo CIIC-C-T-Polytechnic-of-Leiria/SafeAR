@@ -1,10 +1,10 @@
 """
  TODO:
+    1) Blurring está muito lento... - verificar se é possível acelerar
     1.1) Correr com GPU! - doing 
     1.2) Criar variáviel de entrada e saída para o sistema de obfuscação - to do
-    1.2) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
+    1.3) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
     2) Implementar frame obfuscatiom striding - implementar logica que está no Unity
-    3) Fazer download dos modelos automaticamente - optou-se por outra alternativa, por agora
 """
 
 import argparse
@@ -12,6 +12,7 @@ import cProfile
 import importlib
 import io
 import pstats
+import time
 from pstats import SortKey
 
 import yaml
@@ -33,7 +34,6 @@ from src.obfuscator import Colors
 # Testing/debugging imports
 import imageio
 import cupy as cp
-import numpy as np
 
 
 def load_config() -> dict:
@@ -71,7 +71,7 @@ def main(
 
     # camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
 
-    frame = read_image("test_samples/images/cars.jpg")
+    frame = read_image("test_samples/images/students-lockers.jpg")
 
     colors = Colors(model_config["num_classes"])
     colors_dict = colors.get_colors_dict()
@@ -82,63 +82,33 @@ def main(
     obfuscator = ImageObfuscator(policies=obfuscate_policies)
 
     while True:
-        # frame = camera.get_frame()
-        if frame is None:
-            break
+        while True:
+            start_time = time.time()  # start timing
+            if frame is None:
+                break
 
-        # save frame to file
-        # imageio.imwrite("frame_in.jpg", frame.get())
-        # print(
-        #     f"DEBUG: frame shape: {frame.shape}, max: {frame.max()}, min: {frame.min()}"
-        # )  # 0-255
+            boxes, masks = model(frame)
+            end_time1 = time.time()  # end timing
+            print(f"MODEL TIME {((end_time1 - start_time) * 1000):.1f} milliseconds")
 
-        boxes, masks = model(frame)
+            safe_frame = obfuscator.obfuscate(
+                masks=masks,
+                image=cp.asarray(frame),
+                class_ids=[int(box[5]) for box in boxes],
+            )
+            end_time2 = time.time()  # end timing
+            print(
+                f"OBFUSCATION TIME {((end_time2 - end_time1) * 1000):.1f} milliseconds"
+            )
 
-        # -- DEBUG model outputs --
-        # if len(boxes) > 0:
-        #     np.set_printoptions(suppress=True, precision=2)
-        #     print(f"DEBUG: boxes: {boxes}, masks.shape: {masks.shape}")
+            #  save the processed frame
+            safe_frame = safe_frame.astype(cp.uint8)
+            imageio.imwrite("outputs/img2.jpg", safe_frame.get())
+            end_time3 = time.time()  # end timing
+            print(f"SAVE TIME {((end_time3 - end_time2) * 1000):.1f} milliseconds")
 
-        safe_frame = obfuscator.obfuscate(
-            masks=masks,
-            image=cp.asarray(frame),
-            class_ids=[int(box[5]) for box in boxes],
-        )
-
-        safe_frame = safe_frame.astype(np.uint8)
-        #  save the processed frame
-        imageio.imwrite("test_samples/images/cars_processed.jpg", safe_frame.get())
-
-    # while True:
-    #     frame = camera.get_frame()
-    #     if frame is None:
-    #         break
-
-    #     boxes, masks = model(frame)
-
-    #     frame = obfuscator.obfuscate(
-    #         masks=masks,
-    #         image=frame,
-    #         class_ids=[int(box[5]) for box in boxes],
-    #     )
-
-    #     if display_boxes:
-    #         for box in boxes:
-    #             model.draw_bbox(
-    #                 img=frame,
-    #                 bbox=box[0:4],
-    #                 class_name=model_config["class_names"][int(box[5])],
-    #                 color=colors_dict[int(box[5])],
-    #                 policy=policies[int(box[5])],
-    #                 score=box[4],
-    #             )
-
-    #     camera.display_frame(frame, info="Press 'q' to quit.")
-
-    #     if not camera.wait_key("q"):
-    #         break
-
-    # camera.release()
+            end_time = time.time()  # end timing
+            print(f"TOTAL TIME {((end_time - start_time) * 1000):.1f} milliseconds")
 
 
 if __name__ == "__main__":

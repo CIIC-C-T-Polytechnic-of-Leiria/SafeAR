@@ -65,9 +65,9 @@ class Yolov8seg:
     def __call__(self, img_in: cp.ndarray) -> cp.ndarray:
         img, ratios, (pad_w, pad_h) = self.preprocess_img(img_in)
 
-        print(
-            f"DEBUG: img shape: {img.shape}, img type: {img.dtype}, max: {cp.max(img)}, min: {cp.min(img)}"
-        )
+        # print(
+        #     f"DEBUG: img shape: {img.shape}, img type: {img.dtype}, max: {cp.max(img)}, min: {cp.min(img)}"
+        # )
 
         preds = self.session.run(
             None, {self.session.get_inputs()[0].name: cp.asnumpy(img)}
@@ -131,7 +131,7 @@ class Yolov8seg:
         instnc_prds = apply_nms(instnc_prds, conf_threshold, nm, iou_threshold)
 
         # ------ DEBUG: Print number of found boxes ----------------------------
-        print(f"len(instnc_prds): {len(instnc_prds)}")
+        # print(f"len(instnc_prds): {len(instnc_prds)}")
         # ---------------------------------------------------------------------
 
         # Decode and return
@@ -147,18 +147,18 @@ class Yolov8seg:
                 0, self.model_input_height
             )  # y1, y2
 
-            print(
-                f"DEBUG: protos shape: {protos.shape} instnc_prds[..., 6:] shape: {instnc_prds[..., 6:].shape}, "
-                f"instnc_prds[..., :4] shape: {instnc_prds[..., :4].shape}, img_0 shape: {img_0.shape[0:2]}"
-            )
+            # print(
+            #     f"DEBUG: protos shape: {protos.shape} instnc_prds[..., 6:] shape: {instnc_prds[..., 6:].shape}, "
+            #     f"instnc_prds[..., :4] shape: {instnc_prds[..., :4].shape}, img_0 shape: {img_0.shape[0:2]}"
+            # )
 
             b_boxes = self.resize_bboxes(
                 instnc_prds[..., :4], ratios, pad, img_0.shape[0:2]
             )
 
-            print(
-                f"DEBUG: b_boxes shape: {b_boxes.shape}, b_boxes: {b_boxes}, max: {cp.max(b_boxes)}, min: {cp.min(b_boxes)}"
-            )
+            # print(
+            #     f"DEBUG: b_boxes shape: {b_boxes.shape}, b_boxes: {b_boxes}, max: {cp.max(b_boxes)}, min: {cp.min(b_boxes)}"
+            # )
 
             processed_masks = self.process_mask(
                 protos_=protos[0],  # (32, 160, 160)
@@ -209,11 +209,11 @@ class Yolov8seg:
     @staticmethod
     def crop_mask(masks: cp.ndarray, boxes: cp.ndarray) -> cp.ndarray:
         n, h, w = masks.shape
-        print(
-            f"DEBUG crop_mask: masks shape: {masks.shape}, boxes shape: {boxes.shape}"
-        )
+        # print(
+        #     f"DEBUG crop_mask: masks shape: {masks.shape}, boxes shape: {boxes.shape}"
+        # )
         x1, y1, x2, y2 = cp.split(boxes[:, :, None], 4, 1)
-        print(f"DEBUG crop_mask: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2}")
+        # print(f"DEBUG crop_mask: x1: {x1}, y1: {y1}, x2: {x2}, y2: {y2}")
         r = cp.arange(w, dtype=x1.dtype)[None, None, :]
         c = cp.arange(h, dtype=x1.dtype)[None, :, None]
         return masks * ((r >= x1) * (r < x2) * (c >= y1) * (c < y2))
@@ -276,7 +276,7 @@ class Yolov8seg:
         #     plt.axis("off")
         #     plt.savefig(f"mask_{i + 1}.png")
 
-        print("DEBUG: masks after matmul shape: ", masks.shape)
+        # print("DEBUG: masks after matmul shape: ", masks.shape)
         masks = cp.ascontiguousarray(masks)
 
         masks = self.scale_mask(
@@ -520,7 +520,7 @@ def apply_nms(
 
         # For all remaining boxes, calculate IoU with the first box
         ious = cp.array([iou(boxes[-1][:4], box) for box in instnc_prds[:, :4]])
-        print(f"DEBUG: ious: {ious}")
+        # print(f"DEBUG: ious: {ious}")
 
         # If IoU is greater than the threshold, remove the box
         instnc_prds = instnc_prds[ious < iou_threshold]
