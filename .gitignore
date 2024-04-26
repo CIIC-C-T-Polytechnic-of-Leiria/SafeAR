@@ -1,6 +1,7 @@
 
 # IDEs and editors
 /.vscode
+/.idea
 *.swp
 *.swo
 *.swn
@@ -28,6 +29,12 @@ lib64/
 # files to ignore
 img_source_test.py
 test.ipynb
+opencv_install.md
+Model_variation.md
+qodana.yaml
+frame_in.jpg
+image.png
+img_after_processing.png
 
 # folders to ignore
 /backup_cv2

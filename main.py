@@ -37,7 +37,7 @@ import numpy as np
 
 
 def load_config() -> dict:
-    with open("config.yml", "r") as file:
+    with open(file="config.yml", mode="r", encoding="utf-8") as file:
         config_yml = yaml.safe_load(file)
     return config_yml
 
@@ -56,7 +56,7 @@ def read_image(image_path: str) -> cp.ndarray:
 
 def main(
     model_number: int,
-    obfusc_policies: dict,
+    obfuscate_policies: dict,
     display_fps: bool,
     display_boxes: bool,
     save_video: bool,
@@ -79,7 +79,7 @@ def main(
     # print(f"DEBUG: colors: {colors}")
     # print(f"DEBUG: policies dict: {policies}")
 
-    obfuscator = ImageObfuscator(policies=obfusc_policies)
+    obfuscator = ImageObfuscator(policies=obfuscate_policies)
 
     while True:
         # frame = camera.get_frame()
@@ -87,49 +87,27 @@ def main(
             break
 
         # save frame to file
-        imageio.imwrite("frame_in.jpg", frame.get())
-        print(
-            f"DEBUG: frame shape: {frame.shape}, max: {frame.max()}, min: {frame.min()}"
-        )  # 0-255
+        # imageio.imwrite("frame_in.jpg", frame.get())
+        # print(
+        #     f"DEBUG: frame shape: {frame.shape}, max: {frame.max()}, min: {frame.min()}"
+        # )  # 0-255
 
         boxes, masks = model(frame)
 
         # -- DEBUG model outputs --
-        if len(boxes) > 0:
-            np.set_printoptions(suppress=True, precision=2)
-            print(f"DEBUG: boxes: {boxes}, masks.shape: {masks.shape}")
+        # if len(boxes) > 0:
+        #     np.set_printoptions(suppress=True, precision=2)
+        #     print(f"DEBUG: boxes: {boxes}, masks.shape: {masks.shape}")
 
-        # # Assuming masks is a 3D array with shape (num_masks, height, width)
-        # num_masks = masks.shape[0]
-        # print(
-        #     f"DEBUG: masks[0]: {masks[0]}, max: {masks[0].max()}, min: {masks[0].min()}"
-        # )
+        safe_frame = obfuscator.obfuscate(
+            masks=masks,
+            image=cp.asarray(frame),
+            class_ids=[int(box[5]) for box in boxes],
+        )
 
-        # for i in range(num_masks):
-        #     # Convert the mask to a numpy array
-        #     mask = cp.asnumpy(masks[i])
-
-        #     # Plot the mask
-        #     plt.figure()
-        #     plt.imshow(mask, cmap='gray')
-        #     plt.title(f'Mask {i+1}')
-        #     plt.axis('off')
-
-        #     # Save the mask to a file
-        #     plt.savefig(f'mask_{i+1}.png')
-
-        # plt.show()
-
-        # -- DEBUG model outputs --
-
-        # frame = obfuscator.obfuscate(
-        #     masks=masks,
-        #     image=frame,
-        #     class_ids=[int(box[5]) for box in boxes],
-        # )
-
-        # # save the processed frame
-        # imageio.imwrite("test_samples/images/cars_processed.jpg", frame.get())
+        safe_frame = safe_frame.astype(np.uint8)
+        #  save the processed frame
+        imageio.imwrite("test_samples/images/cars_processed.jpg", safe_frame.get())
 
     # while True:
     #     frame = camera.get_frame()
@@ -178,14 +156,14 @@ if __name__ == "__main__":
         "--class_id_list",
         nargs="+",
         type=int,
-        help="Specify the list of class IDs to obfuscate. Separate IDs with commas.",
+        help="Specify the list of class IDs to obfuscate. Separate IDs with spaces.",
     )
 
     parser.add_argument(
         "--obfuscation_type_list",
         nargs="+",
         type=str,
-        help="Specify the list of obfuscation types for each class ID. Separate types with commas.",
+        help="Specify the list of obfuscation types for each class ID. Separate types with spaces.",
     )
 
     parser.add_argument(
@@ -236,12 +214,10 @@ if __name__ == "__main__":
 
     # Update the dictionary with the actual obfuscation policies
     policies.update(
-        {
-            class_id: obfuscation_type
-            for class_id, obfuscation_type in zip(
-                args.class_id_list, args.obfuscation_type_list
-            )
-        }
+        (class_id, obfuscation_type)
+        for class_id, obfuscation_type in zip(
+            args.class_id_list, args.obfuscation_type_list
+        )
     )
     # Start profiling
     pr = cProfile.Profile()
@@ -249,7 +225,7 @@ if __name__ == "__main__":
 
     main(
         model_number=args.model_number,
-        obfusc_policies=policies,
+        obfuscate_policies=policies,
         source=args.img_source,
         display_fps=args.show_fps,
         display_boxes=args.show_boxes,
@@ -263,8 +239,8 @@ if __name__ == "__main__":
     s = io.StringIO()
 
     # Sort the results by cumulative time spent in the function
-    sortby = SortKey.CUMULATIVE
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    sort = SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats(sort)
     ps.print_stats()
 
     # Print the profiling results

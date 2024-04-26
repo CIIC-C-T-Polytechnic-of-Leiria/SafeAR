@@ -1,18 +1,30 @@
+"""
+This module contains the ImageObfuscator class, which is used to obfuscate
+images based on a set of masks and policies.
+"""
+
 import cupy as cp
+import yaml
 from cucim.skimage import transform
+from cupyx.scipy import ndimage
 
 
 class ImageObfuscator:
     def __init__(self, policies: dict):
         self.policies = policies
-        self.available_policies = ["masking", "bluring", "pixelation", "none"]
+        with open(file="config.yml", mode="r", encoding="utf-8") as file:
+            config = yaml.safe_load(file)
+            self.available_policies = config["obfuscation_types"]
 
     def validate_inputs(self, masks: cp.ndarray, image: cp.ndarray):
-        if masks is not None and len(masks) > 0:
-            if len(masks.shape) != 3 or masks.dtype != cp.bool_:
-                raise ValueError(
-                    f"masks has shape {masks.shape} and dtype {masks.dtype}, expected shape (n, H, W) and dtype bool"
-                )
+        if (
+            masks is not None
+            and len(masks) > 0
+            and (len(masks.shape) != 3 or masks.dtype != cp.bool_)
+        ):
+            raise ValueError(
+                f"masks has shape {masks.shape} and dtype {masks.dtype}, expected shape (n, H, W) and dtype bool"
+            )
 
         if len(image.shape) != 3 or image.shape[2] != 3 or image.dtype != cp.uint8:
             raise ValueError(
@@ -23,21 +35,30 @@ class ImageObfuscator:
             if policy not in self.available_policies:
                 raise ValueError(f"Unknown policy: {policy}")
 
-    def apply_mask(self, image: cp.ndarray, mask: cp.ndarray):
-        mask = mask.astype(cp.uint8) * 255
+    @staticmethod
+    def apply_mask(image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
+        print(f"DEBUG: ap image type: {type(image)}, mask type: {type(mask)}")
+        mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
         inverse_mask = cp.logical_not(mask)
-        masked_image = cp.where(inverse_mask, image, cp.array(0)) # set masked area to 0
-        return masked_image.get()
+        print(
+            f"DEBUG: inverse_mask type: {type(inverse_mask)}, image type: {type(image)}"
+        )
+        masked_image = cp.where(
+            inverse_mask, image, cp.array(0)
+        )  # set masked area to 0
+        return cp.asarray(masked_image.get())
 
-    def apply_blur(self, image: cp.ndarray, mask: cp.ndarray):
-        mask = mask.astype(cp.uint8) * 255
-        blurred_image = cp.ndimage.median_filter(image, size=(51, 51, 1))
+    @staticmethod
+    def apply_blur(image: cp.ndarray, mask: cp.ndarray):
+        mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
+        blurred_image = ndimage.median_filter(image, size=(51, 51, 1))
         mask_inv = cp.logical_not(mask)
         final_image = cp.where(mask_inv, image, blurred_image)
-        return final_image.get()
+        return cp.asarray(final_image.get())
 
+    @staticmethod
     def apply_pixelate(
-        self, image: cp.ndarray, mask: cp.ndarray, rescale: int = 30
+        image: cp.ndarray, mask: cp.ndarray, rescale: int = 20
     ) -> cp.ndarray:
 
         image_cp = cp.asarray(image, dtype=cp.uint8)
@@ -57,28 +78,32 @@ class ImageObfuscator:
             anti_aliasing=False,
         )
 
-        mask = mask.astype(cp.uint8) * 255
-        mask = cp.repeat(mask[..., None], 3, axis=-1)
-        final_image = cp.where(mask == 0, pixelated_image, image_cp)
+        mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
+        mask_inv = cp.logical_not(mask)
+        final_image = cp.where(mask_inv, image_cp, pixelated_image)
 
         return final_image
 
     def obfuscate(self, masks: cp.ndarray, image: cp.ndarray, class_ids: list):
-        
+
         self.validate_inputs(masks, image)
+
+        # print(f"DEBUG: ob. masks type: {type(masks)}, image type: {type(image)}")
 
         for mask, class_id in zip(masks, class_ids):
             policy = self.policies.get(class_id)
             if policy == "masking":
+                # print(f"DEBUG: image type at start of masking: {type(image)}")
                 image = self.apply_mask(image, mask)
-            elif policy == "bluring":
+                # print(f"DEBUG: image type at end of masking: {type(image)}")
+            elif policy == "blurring":
                 image = self.apply_blur(image, mask)
             elif policy == "pixelation":
                 image = self.apply_pixelate(image, mask)
             else:
                 pass
 
-        return image.get()
+        return cp.asarray(image.get())
 
 
 class Colors:
@@ -107,19 +132,21 @@ class Colors:
             "FF37C7",
         )
         self.palette = [self.hex2rgb(f"#{c}") for c in hexs]
-        self.n = len(self.palette)
-        self.colors_dict = {i: self.palette[i % self.n] for i in range(num_categories)}
+        self.num = len(self.palette)
+        self.colors_dict = {
+            i: self.palette[i % self.num] for i in range(num_categories)
+        }
 
     def __call__(self, i: int, bgr=False):
         """Converts hex color codes to RGB values."""
-        c = self.colors_dict[i]
-        return (c[2], c[1], c[0]) if bgr else c
+        channel: tuple[int, ...] = self.colors_dict[i]
+        return (channel[2], channel[1], channel[0]) if bgr else channel
 
     def get_colors_dict(self):
         """Returns the colors dictionary."""
         return self.colors_dict
 
     @staticmethod
-    def hex2rgb(h: str):
+    def hex2rgb(hexa: str):
         """Converts hex color codes to RGB values (i.e. default PIL order)."""
-        return tuple(int(h[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))
+        return tuple(int(hexa[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))

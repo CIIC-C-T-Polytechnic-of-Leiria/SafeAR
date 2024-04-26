@@ -2,8 +2,6 @@ from typing import Tuple
 
 import cupy as cp
 # Debugging
-import matplotlib.pyplot as plt
-import numpy as np
 import onnxruntime as ort
 from PIL import Image, ImageDraw, ImageFont
 from cucim.skimage import transform
@@ -36,7 +34,7 @@ class Yolov8seg:
         options.log_severity_level = 4
         options.enable_profiling = False
 
-        exec_provid = (
+        exec_provider = (
             ["CUDAExecutionProvider", "CPUExecutionProvider"]
             if ort.get_device() == "GPU"
             else ["CPUExecutionProvider"]
@@ -45,7 +43,7 @@ class Yolov8seg:
         self.session = ort.InferenceSession(
             self.model_path,
             sess_options=options,
-            providers=exec_provid,
+            providers=exec_provider,
         )
 
         print(f"Yolov8seg: Model Using {ort.get_device()} for inference")
@@ -201,8 +199,6 @@ class Yolov8seg:
         masks = transform.resize(
             image=masks, output_shape=img_0_shape, order=0, anti_aliasing=False
         )
-        # # Since cv2.resize is not available in CuPy, you need to use 'cupyx.scipy.ndimage.zoom' function to resize
-        # the masks.
 
         masks = cp.ascontiguousarray(masks)
 
@@ -271,14 +267,14 @@ class Yolov8seg:
         masks = expit(masks)
 
         # plot each mask
-        for i in range(masks.shape[-1]):
-            plt.figure()
-            plt.imshow(
-                cp.asnumpy(masks[:, :, i]), cmap="gray"
-            )  # Convert the CuPy array to a NumPy array
-            plt.title(f"Mask {i + 1}")
-            plt.axis("off")
-            plt.savefig(f"mask_{i + 1}.png")
+        # for i in range(masks.shape[-1]):
+        #     plt.figure()
+        #     plt.imshow(
+        #         cp.asnumpy(masks[:, :, i]), cmap="gray"
+        #     )  # Convert the CuPy array to a NumPy array
+        #     plt.title(f"Mask {i + 1}")
+        #     plt.axis("off")
+        #     plt.savefig(f"mask_{i + 1}.png")
 
         print("DEBUG: masks after matmul shape: ", masks.shape)
         masks = cp.ascontiguousarray(masks)
@@ -288,23 +284,23 @@ class Yolov8seg:
         )  # re-scale mask from P3 shape to original input image shape
 
         # save each mask
-        for i in range(masks.shape[-1]):
-            plt.figure()
-            plt.imshow(cp.asnumpy(masks[:, :, i]), cmap="gray")
-            plt.savefig(f"mask_rescaled_{i + 1}.png")
+        # for i in range(masks.shape[-1]):
+        #     plt.figure()
+        #     plt.imshow(cp.asnumpy(masks[:, :, i]), cmap="gray")
+        #     plt.savefig(f"mask_rescaled_{i + 1}.png")
 
-        print(
-            f"DEBUG: masks after scaling shape: {masks.shape}, max: {cp.max(masks)}, min: {cp.min(masks)}"
-        )
+        # print(
+        #     f"DEBUG: masks after scaling shape: {masks.shape}, max: {cp.max(masks)}, min: {cp.min(masks)}"
+        # )
 
         masks = cp.einsum("HWN -> NHW", masks)  # HWN -> NHW
         masks = self.crop_mask(masks, bboxes)
 
         # plot cropped masks after scaling (need to convert to numpy array)
-        for i in range(masks.shape[0]):
-            plt.figure()
-            plt.imshow(cp.asnumpy(masks[i]), cmap="gray")
-            plt.savefig(f"mask_cropped_{i + 1}.png")
+        # for i in range(masks.shape[0]):
+        #     plt.figure()
+        #     plt.imshow(cp.asnumpy(masks[i]), cmap="gray")
+        #     plt.savefig(f"mask_cropped_{i + 1}.png")
 
         return cp.greater(
             masks, 0.5
@@ -317,23 +313,23 @@ class Yolov8seg:
         resized_img, resize_ratios, padding = self.resize_and_pad(img)
 
         # ------ DEBUG: save resized_img to disk ----------------------------
-        print(
-            f"DEBUG: resized_img shape: {resized_img.shape}, max: {cp.max(resized_img)}, min: {cp.min(resized_img)}"
-        )
-        img_to_save = cp.asnumpy(resized_img * 255.0).astype("uint8")
-        plt.imsave(f"resized_img{np.random.randint(10)}.png", img_to_save)
+        # print(
+        #     f"DEBUG: resized_img shape: {resized_img.shape}, max: {cp.max(resized_img)}, min: {cp.min(resized_img)}"
+        # )
+        # img_to_save = cp.asnumpy(resized_img * 255.0).astype("uint8")
+        # plt.imsave(f"resized_img{np.random.randint(10)}.png", img_to_save)
         # ---------------------------------------------------------------------
 
         model_in_img = self.convert_to_yolov8_input(resized_img)
 
         # ------ DEBUG: save model_in_img to disk ----------------------------
-        img_to_save = cp.einsum("CHW->HWC", model_in_img[0, :, :, :])
-        img_to_save = img_to_save[:, :, ::-1]  # Swap color channels (BGR -> RGB)
-        img_to_save = cp.asnumpy(img_to_save * 255.0).astype("uint8")
-        print(
-            f"DEBUG: model_in_img shp: {img_to_save.shape} max: {cp.max(img_to_save)} min: {cp.min(img_to_save)}"
-        )
-        plt.imsave(f"model_in_img{np.random.randint(10)}.png", img_to_save)
+        # img_to_save = cp.einsum("CHW->HWC", model_in_img[0, :, :, :])
+        # img_to_save = img_to_save[:, :, ::-1]  # Swap color channels (BGR -> RGB)
+        # img_to_save = cp.asnumpy(img_to_save * 255.0).astype("uint8")
+        # print(
+        #     f"DEBUG: model_in_img shp: {img_to_save.shape} max: {cp.max(img_to_save)} min: {cp.min(img_to_save)}"
+        # )
+        # plt.imsave(f"model_in_img{np.random.randint(10)}.png", img_to_save)
         # ---------------------------------------------------------------------
 
         return model_in_img, resize_ratios, padding
