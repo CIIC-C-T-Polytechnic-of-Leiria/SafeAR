@@ -39,6 +39,5 @@ test.ipynb
 *.onnx
 *.prof
 *.deb
-*.pyc
 *.log
 

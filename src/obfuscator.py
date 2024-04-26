@@ -26,7 +26,7 @@ class ImageObfuscator:
     def apply_mask(self, image: cp.ndarray, mask: cp.ndarray):
         mask = mask.astype(cp.uint8) * 255
         inverse_mask = cp.logical_not(mask)
-        masked_image = cp.where(inverse_mask, image, 0)
+        masked_image = cp.where(inverse_mask, image, cp.array(0)) # set masked area to 0
         return masked_image.get()
 
     def apply_blur(self, image: cp.ndarray, mask: cp.ndarray):

@@ -1,23 +1,24 @@
 """
- TODO: 
-    1) Possibiltar ao utilizador a escolha do modelo a ser utilizado - done 
+ TODO:
     1.1) Correr com GPU! - doing 
+    1.2) Criar variáviel de entrada e saída para o sistema de obfuscação - to do
     1.2) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
     2) Implementar frame obfuscatiom striding - implementar logica que está no Unity
     3) Fazer download dos modelos automaticamente - optou-se por outra alternativa, por agora
 """
 
+import argparse
 import cProfile
-import pstats
+import importlib
 import io
+import pstats
 from pstats import SortKey
 
-import importlib
-import argparse
 import yaml
-import src.seg_yolov8
+
 import src.img_handle
 import src.obfuscator
+import src.seg_yolov8
 
 # Reload the modules
 importlib.reload(src.seg_yolov8)
@@ -25,12 +26,11 @@ importlib.reload(src.img_handle)
 importlib.reload(src.obfuscator)
 
 # Import the classes from the reloaded modules
-from src.seg_yolov8 import Yolov8Seg
-from src.img_handle import Camera
+from src.seg_yolov8 import Yolov8seg
 from src.obfuscator import ImageObfuscator
 from src.obfuscator import Colors
 
-# Testing imports
+# Testing/debugging imports
 import imageio
 import cupy as cp
 import numpy as np
@@ -38,37 +38,36 @@ import numpy as np
 
 def load_config() -> dict:
     with open("config.yml", "r") as file:
-        config = yaml.safe_load(file)
-    return config
+        config_yml = yaml.safe_load(file)
+    return config_yml
 
 
-def list_models(config: dict):
+def list_models(config_dict: dict):
     print("Available models:")
-    models = list(config["models"].keys())
+    models = list(config_dict["models"].keys())
     for i, model in enumerate(models, start=1):
         print(f"    [{i}] - {model}")
 
 
 def read_image(image_path: str) -> cp.ndarray:
-    image = imageio.imread(image_path)
+    image = imageio.v3.imread(image_path)
     return cp.asarray(image)
 
 
 def main(
     model_number: int,
-    policies: dict,
+    obfusc_policies: dict,
     display_fps: bool,
     display_boxes: bool,
     save_video: bool,
     source=0,
-    config=None,
+    config_yml=None,
 ):
-
-    model_config = list(config["models"].values())[model_number]
+    model_config = list(config_yml["models"].values())[model_number]
 
     # TODO: Instantiate the correct model based on the user's choice
 
-    model = Yolov8Seg(model_path=model_config["model_path"])
+    model = Yolov8seg(model_path=model_config["model_path"])
 
     # camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
 
@@ -80,7 +79,7 @@ def main(
     # print(f"DEBUG: colors: {colors}")
     # print(f"DEBUG: policies dict: {policies}")
 
-    obfuscator = ImageObfuscator(policies=policies)
+    obfuscator = ImageObfuscator(policies=obfusc_policies)
 
     while True:
         # frame = camera.get_frame()
@@ -89,11 +88,39 @@ def main(
 
         # save frame to file
         imageio.imwrite("frame_in.jpg", frame.get())
-        print(f"DEBUG: frame shape: {frame.shape}, max: {frame.max()}, min: {frame.min()}") # 0-255
+        print(
+            f"DEBUG: frame shape: {frame.shape}, max: {frame.max()}, min: {frame.min()}"
+        )  # 0-255
 
         boxes, masks = model(frame)
+
+        # -- DEBUG model outputs --
         if len(boxes) > 0:
+            np.set_printoptions(suppress=True, precision=2)
             print(f"DEBUG: boxes: {boxes}, masks.shape: {masks.shape}")
+
+        # # Assuming masks is a 3D array with shape (num_masks, height, width)
+        # num_masks = masks.shape[0]
+        # print(
+        #     f"DEBUG: masks[0]: {masks[0]}, max: {masks[0].max()}, min: {masks[0].min()}"
+        # )
+
+        # for i in range(num_masks):
+        #     # Convert the mask to a numpy array
+        #     mask = cp.asnumpy(masks[i])
+
+        #     # Plot the mask
+        #     plt.figure()
+        #     plt.imshow(mask, cmap='gray')
+        #     plt.title(f'Mask {i+1}')
+        #     plt.axis('off')
+
+        #     # Save the mask to a file
+        #     plt.savefig(f'mask_{i+1}.png')
+
+        # plt.show()
+
+        # -- DEBUG model outputs --
 
         # frame = obfuscator.obfuscate(
         #     masks=masks,
@@ -187,7 +214,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
     if not any(vars(args).values()):
         parser.print_help()
         exit()
@@ -223,12 +249,12 @@ if __name__ == "__main__":
 
     main(
         model_number=args.model_number,
-        policies=policies,
+        obfusc_policies=policies,
         source=args.img_source,
         display_fps=args.show_fps,
         display_boxes=args.show_boxes,
         save_video=args.save_video,
-        config=config,
+        config_yml=config,
     )
     # Stop profiling
     pr.disable()
