@@ -5,6 +5,9 @@
     1.2) Criar variáviel de entrada e saída para o sistema de obfuscação - to do
     1.3) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
     2) Implementar frame obfuscatiom striding - implementar logica que está no Unity
+
+    Usage:
+    python main.py --model_number 0 --class_id_list 0 1 2 3  --img_source 0 --obfuscation_type_list blurring blurring blurring blurring
 """
 
 import argparse
@@ -83,32 +86,36 @@ def main(
 
     while True:
         while True:
-            start_time = time.time()  # start timing
+            start_time = time.time()
             if frame is None:
                 break
 
             boxes, masks = model(frame)
-            end_time1 = time.time()  # end timing
-            print(f"MODEL TIME {((end_time1 - start_time) * 1000):.1f} milliseconds")
+            end_time1 = time.time()
+            print(
+                f"MOD: TOTAL TIME {((end_time1 - start_time) * 1000):.1f} milliseconds"
+            )
 
             safe_frame = obfuscator.obfuscate(
                 masks=masks,
                 image=cp.asarray(frame),
                 class_ids=[int(box[5]) for box in boxes],
             )
-            end_time2 = time.time()  # end timing
+            end_time2 = time.time()
             print(
-                f"OBFUSCATION TIME {((end_time2 - end_time1) * 1000):.1f} milliseconds"
+                f"SYS: OBFUSC. TIME {((end_time2 - end_time1) * 1000):.1f} milliseconds"
             )
 
             #  save the processed frame
             safe_frame = safe_frame.astype(cp.uint8)
             imageio.imwrite("outputs/img2.jpg", safe_frame.get())
-            end_time3 = time.time()  # end timing
-            print(f"SAVE TIME {((end_time3 - end_time2) * 1000):.1f} milliseconds")
+            end_time3 = time.time()
+            print(f"SYS: SAVE TIME {((end_time3 - end_time2) * 1000):.1f} milliseconds")
 
-            end_time = time.time()  # end timing
-            print(f"TOTAL TIME {((end_time - start_time) * 1000):.1f} milliseconds")
+            end_time = time.time()
+            print(
+                f"SYS: TOTAL TIME {((end_time - start_time) * 1000):.1f} milliseconds"
+            )
 
 
 if __name__ == "__main__":

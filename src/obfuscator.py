@@ -1,12 +1,10 @@
 """
-This module contains the ImageObfuscator class, which is used to obfuscate
-images based on a set of masks and policies.
+This module contains the ImageObfuscator class, which is used to obfuscate images based on a
+set of masks and policies.
 """
 
-# TODO: Verify is GPu is being used in all operations
 import cupy as cp
 import yaml
-from cucim.skimage import transform
 from cupyx.scipy import ndimage
 
 
@@ -36,93 +34,53 @@ class ImageObfuscator:
             if policy not in self.available_policies:
                 raise ValueError(f"Unknown policy: {policy}")
 
-    import cupy as cp
+    @staticmethod
+    def apply_mask(img: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
+        mask = cp.broadcast_to(mask[:, :, cp.newaxis], img.shape).astype(cp.uint8) * 255
+        img[mask != 0] = 0
+        return img
 
     @staticmethod
-    def apply_mask(image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
-        # Assuming mask is already boolean
-        cp.putmask(image, ~mask, 0)  # set masked area to 0 in-place
+    def apply_blur(image: cp.ndarray, mask: cp.ndarray, sigma: int = 10) -> cp.ndarray:
+        blurred_image = ndimage.gaussian_filter(image, sigma=(sigma, sigma, 0))
+        image[mask != 0] = blurred_image[mask != 0, :3]
         return image
-
-    # @staticmethod
-    # def apply_mask(image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
-    #     """
-    #     Applies a mask to an image, obfuscating the masked area.
-    #
-    #     Args:
-    #         image (cp.ndarray): Image to be obfuscated
-    #         mask (cp.ndarray): Mask to be applied to the image
-    #
-    #     Returns:
-    #         cp.ndarray: Obfuscated image
-    #     """
-    #     # print(f"DEBUG: ap image type: {type(image)}, mask type: {type(mask)}")
-    #     mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
-    #     inverse_mask = cp.logical_not(mask)
-    #     # print(
-    #     #     f"DEBUG: inverse_mask type: {type(inverse_mask)}, image type: {type(image)}"
-    #     # )
-    #     masked_image = cp.where(
-    #         inverse_mask, image, cp.array(0)
-    #     )  # set masked area to 0
-    #     return cp.asarray(masked_image.get())
-
-    @staticmethod
-    def apply_blur(image: cp.ndarray, mask: cp.ndarray):
-        mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
-        blurred_image = ndimage.median_filter(image, size=(51, 51, 1))
-        mask_inv = cp.logical_not(mask)
-        final_image = cp.where(mask_inv, image, blurred_image)
-        return cp.asarray(final_image.get())
 
     @staticmethod
     def apply_pixelate(
-        image: cp.ndarray, mask: cp.ndarray, rescale: int = 20
+        image: cp.ndarray, mask: cp.ndarray, square: int = 20
     ) -> cp.ndarray:
-
         image_cp = cp.asarray(image, dtype=cp.uint8)
-
-        pixelated_img_small = transform.resize(
-            image=image_cp,
-            order=0,
-            output_shape=(image_cp.shape[0] // rescale, image_cp.shape[1] // rescale),
-            preserve_range=True,
-            anti_aliasing=False,
-        )
-        pixelated_image = transform.resize(
-            image=pixelated_img_small,
-            order=0,
-            output_shape=(image_cp.shape[0], image_cp.shape[1]),
-            preserve_range=True,
-            anti_aliasing=False,
-        )
-
         mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
-        mask_inv = cp.logical_not(mask)
-        final_image = cp.where(mask_inv, image_cp, pixelated_image)
-
+        # Downsampling followed by Upsampling to create the pixelated effect
+        img_small = image_cp[::square, ::square, :]
+        pixelated_img = cp.repeat(cp.repeat(img_small, square, axis=0), square, axis=1)
+        # Crop the pixelated image to match the shape of the original image
+        pixelated_img = pixelated_img[: image_cp.shape[0], : image_cp.shape[1], :]
+        # Apply the pixelation effect only to the masked region
+        final_image = cp.where(mask != 0, pixelated_img, image_cp)
         return final_image
 
     def obfuscate(self, masks: cp.ndarray, image: cp.ndarray, class_ids: list):
-
         self.validate_inputs(masks, image)
 
-        # print(f"DEBUG: ob. masks type: {type(masks)}, image type: {type(image)}")
+        # Create a copy of the original image
+        image_copy = image.copy()
 
         for mask, class_id in zip(masks, class_ids):
             policy = self.policies.get(class_id)
             if policy == "masking":
-                # print(f"DEBUG: image type at start of masking: {type(image)}")
-                image = self.apply_mask(image, mask)
-                # print(f"DEBUG: image type at end of masking: {type(image)}")
+                image_copy = self.apply_mask(image_copy, mask)
             elif policy == "blurring":
-                image = self.apply_blur(image, mask)
+                image_copy = self.apply_blur(image_copy, mask)
             elif policy == "pixelation":
-                image = self.apply_pixelate(image, mask)
+                image_copy = self.apply_pixelate(image_copy, mask)
             else:
                 pass
 
-        return cp.asarray(image.get())
+        return cp.asarray(
+            image_copy.get()
+        )  # TODO: do we need to call get() to turn it into a numpy array in CPU?
 
 
 class Colors:
