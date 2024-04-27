@@ -1,7 +1,5 @@
 """
  TODO:
-    1) Blurring está muito lento... - verificar se é possível acelerar
-    1.1) Correr com GPU! - doing 
     1.2) Criar variáviel de entrada e saída para o sistema de obfuscação - to do
     1.3) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
     2) Implementar frame obfuscatiom striding - implementar logica que está no Unity

@@ -37,7 +37,7 @@ Available Instance Segmentation Models
 | Model       | Size (MB) | Training Data | Classes | Inference Time CPU (ms)\* | Inference Time GPU (ms)\* |
 |-------------|-----------|---------------|---------|---------------------------|---------------------------|
 | YOLOv5n-seg | 8.5       | COCO 2017     | 80      | -                         | -                         |
-| YOLOv8n-seg | 13.8      | COCO 2017     | 80      | -                         | -                         |
+| YOLOv8n-seg | 13.8      | COCO 2017     | 80      |                           | ~20                       |
 | YOLOv9c-seg | 111.1     | COCO 2017     | 80      | -                         | -                         |
 | gelan-c-seg | 110.0     | COCO 2017     | 80      | -                         | -                         |
 | RTMDet      | -         | COCO 2017     | 80      | -                         | -                         |
