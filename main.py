@@ -74,7 +74,7 @@ def main(
 
     # camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
 
-    frame = read_image("test_samples/images/students-lockers.jpg")
+    frame = read_image("test_samples/images/fazlni_web-900x600.jpg")
 
     colors = Colors(model_config["num_classes"])
     colors_dict = colors.get_colors_dict()
