@@ -1,5 +1,7 @@
 """
  TODO:
+    ! Implementar "warm-up" do modelo (5 ciclos de inferencia)- to do
+    !! O que deve e tem de ir nos metadados do frame, e como pode ser codificado no base64?
     1.2) Criar variáviel de entrada e saída para o sistema de obfuscação - to do
     1.3) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
     2) Implementar frame obfuscatiom striding - implementar logica que está no Unity
@@ -9,12 +11,8 @@
 """
 
 import argparse
-import cProfile
 import importlib
-import io
-import pstats
-import time
-from pstats import SortKey
+from typing import Any
 
 import yaml
 
@@ -30,193 +28,161 @@ importlib.reload(src.obfuscator)
 # Import the classes from the reloaded modules
 from src.seg_yolov8 import Yolov8seg
 from src.obfuscator import ImageObfuscator
-from src.obfuscator import Colors
 
 # Testing/debugging imports
-import imageio
 import cupy as cp
+import base64
+from io import BytesIO
+import imageio.v2 as imageio
 
 
-def load_config() -> dict:
-    with open(file="config.yml", mode="r", encoding="utf-8") as file:
-        config_yml = yaml.safe_load(file)
-    return config_yml
+class SafeARService:
+
+    def __init__(self):
+        self.obfuscator = None
+        self.model = None
+        self.obfuscation_policies: dict[str, Any] = {}
+
+    def configure(self, model_number: int, obfuscation_policies: dict):
+        config_yml = self.load_config()
+        model_name = list(config_yml["models"].keys())[model_number]
+        model_path = config_yml["models"][model_name]["model_path"]
+
+        self.model = Yolov8seg(model_path=model_path)
+        self.obfuscation_policies = obfuscation_policies
+        self.obfuscator = ImageObfuscator(policies=self.obfuscation_policies)
+
+    def process_frame(self, image_base64: str) -> bytes:
+        image_bytes = base64.b64decode(image_base64)
+        buffer = BytesIO(image_bytes)
+        img_array = imageio.imread(buffer)
+        frame = cp.asarray(img_array)
+
+        # DEBUG: save the input frame
+        # imageio.imwrite("outputs/img_in.png", frame.get())
+
+        boxes, masks = self.model(frame)
+        safe_frame = self.obfuscator.obfuscate(
+            image=frame, masks=masks, class_ids=[int(box[5]) for box in boxes]
+        )
+
+        safe_frame = safe_frame.astype(cp.uint8)
+        safe_frame_bytes = safe_frame.tobytes()
+        return safe_frame_bytes
+
+    @staticmethod
+    def read_base64_image(file_path):
+        with open(file_path, "r") as f:
+            image_base64 = f.read()
+        image_data = base64.b64decode(image_base64)
+        return image_data
+
+    @staticmethod
+    def save_processed_frame(frame_bytes, output_path):
+        frame_array = cp.frombuffer(frame_bytes, dtype=cp.uint8)
+        if len(frame_array) != 640 * 640 * 3:
+            raise ValueError("Incorrect size of frame data")
+        frame_array = frame_array.reshape((640, 640, 3))
+        # Convert cupy array to numpy array
+        frame_array = cp.asnumpy(frame_array)
+        imageio.imwrite(output_path, frame_array)
+
+    @staticmethod
+    def load_config() -> dict:
+        with open(file="config.yml", mode="r", encoding="utf-8") as file:
+            config_yml = yaml.safe_load(file)
+        return config_yml
+
+    @staticmethod
+    def list_models() -> list:
+        config_yml = SafeARService.load_config()
+        return list(config_yml["models"].keys())
 
 
-def list_models(config_dict: dict):
-    print("Available models:")
-    models = list(config_dict["models"].keys())
-    for i, model in enumerate(models, start=1):
-        print(f"    [{i}] - {model}")
+def main(args):
+    safeARservice = SafeARService()
+
+    safeARservice.configure(
+        model_number=args.model_number,
+        obfuscation_policies=args.obfuscate_policies,
+    )
+
+    frame_bytes = safeARservice.process_frame(args.image_base64)
+
+    return frame_bytes
 
 
-def read_image(image_path: str) -> cp.ndarray:
-    image = imageio.v3.imread(image_path)
-    return cp.asarray(image)
-
-
-def main(
-    model_number: int,
-    obfuscate_policies: dict,
-    display_fps: bool,
-    display_boxes: bool,
-    save_video: bool,
-    source=0,
-    config_yml=None,
-):
-    model_config = list(config_yml["models"].values())[model_number]
-
-    # TODO: Instantiate the correct model based on the user's choice
-
-    model = Yolov8seg(model_path=model_config["model_path"])
-
-    # camera = Camera(source=source, display_fps=display_fps, save_video=save_video)
-
-    frame = read_image("test_samples/images/fazlni_web-900x600.jpg")
-
-    colors = Colors(model_config["num_classes"])
-    colors_dict = colors.get_colors_dict()
-
-    # print(f"DEBUG: colors: {colors}")
-    # print(f"DEBUG: policies dict: {policies}")
-
-    obfuscator = ImageObfuscator(policies=obfuscate_policies)
-
-    while True:
-        while True:
-            start_time = time.time()
-            if frame is None:
-                break
-
-            boxes, masks = model(frame)
-            end_time1 = time.time()
-            print(
-                f"MOD: TOTAL TIME {((end_time1 - start_time) * 1000):.1f} milliseconds"
-            )
-
-            safe_frame = obfuscator.obfuscate(
-                masks=masks,
-                image=cp.asarray(frame),
-                class_ids=[int(box[5]) for box in boxes],
-            )
-            end_time2 = time.time()
-            print(
-                f"SYS: OBFUSC. TIME {((end_time2 - end_time1) * 1000):.1f} milliseconds"
-            )
-
-            #  save the processed frame
-            safe_frame = safe_frame.astype(cp.uint8)
-            imageio.imwrite("outputs/img2.jpg", safe_frame.get())
-            end_time3 = time.time()
-            print(f"SYS: SAVE TIME {((end_time3 - end_time2) * 1000):.1f} milliseconds")
-
-            end_time = time.time()
-            print(
-                f"SYS: TOTAL TIME {((end_time - start_time) * 1000):.1f} milliseconds"
-            )
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
+def parse_args():
+    arg_parser = argparse.ArgumentParser(description="Obfuscation script")
+    arg_parser.add_argument(
         "--model_number",
         type=int,
         default=0,
         help="Choose the number of the model to use. Use '0' for the default model.",
     )
 
-    parser.add_argument(
+    arg_parser.add_argument(
         "--class_id_list",
         nargs="+",
         type=int,
         help="Specify the list of class IDs to obfuscate. Separate IDs with spaces.",
     )
 
-    parser.add_argument(
+    arg_parser.add_argument(
         "--obfuscation_type_list",
         nargs="+",
         type=str,
         help="Specify the list of obfuscation types for each class ID. Separate types with spaces.",
     )
 
-    parser.add_argument(
-        "--img_source",
-        type=lambda x: int(x) if x.isdigit() else x,
+    arg_parser.add_argument(
+        "--image_base64_file",
+        type=str,
+        help="Path to the file containing the Base64-encoded image string.",
+    )
+
+    arg_parser.add_argument(
+        "--version",
+        action="version",
+        version="Obfuscation script 1.0",
+    )
+
+    arg_parser.add_argument(
+        "--square",
+        type=int,
         default=0,
-        help="Image source, can be a number or a path. Default is 0.",
+        help="Size of the square for pixelation effect.",
     )
 
-    parser.add_argument(
-        "--show_fps",
-        action="store_true",
-        help="Choose to display the frames per second.",
+    arg_parser.add_argument(
+        "--sigma",
+        type=int,
+        default=0,
+        help="Sigma value for the blurring effect.",
     )
 
-    parser.add_argument(
-        "--show_boxes",
-        action="store_true",
-        help="Choose to display the bounding boxes.",
-    )
+    args = arg_parser.parse_args()
 
-    parser.add_argument(
-        "--save_video",
-        action="store_true",
-        help="Choose to save the processed video.",
-    )
-
-    args = parser.parse_args()
-    if not any(vars(args).values()):
-        parser.print_help()
+    if not args.__dict__:
+        arg_parser.print_help()
         exit()
 
-    if args.obfuscation_type_list is None:
-        args.obfuscation_type_list = ["masking"] * len(args.class_id_list)
-    elif args.class_id_list is not None and len(args.obfuscation_type_list) < len(
-        args.class_id_list
-    ):
-        last_obfuscation_type = args.obfuscation_type_list[-1]
-        args.obfuscation_type_list += [last_obfuscation_type] * (
-            len(args.class_id_list) - len(args.obfuscation_type_list)
-        )
+    # Create the obfuscate_policies dictionary directly in the parser
+    args.obfuscate_policies = dict(zip(args.class_id_list, args.obfuscation_type_list))
 
-    config = load_config()
-    num_classes = config["models"]["yolov8"]["num_classes"]
+    # Read the Base64-encoded image string from the file
+    with open(args.image_base64_file, "r") as f:
+        args.image_base64 = f.read()
 
-    # Create a dictionary with all possible class IDs and None as the obfuscation policy
-    policies = {i: "none" for i in range(num_classes)}
+    return args
 
-    # Update the dictionary with the actual obfuscation policies
-    policies.update(
-        (class_id, obfuscation_type)
-        for class_id, obfuscation_type in zip(
-            args.class_id_list, args.obfuscation_type_list
-        )
-    )
-    # Start profiling
-    pr = cProfile.Profile()
-    pr.enable()
 
-    main(
-        model_number=args.model_number,
-        obfuscate_policies=policies,
-        source=args.img_source,
-        display_fps=args.show_fps,
-        display_boxes=args.show_boxes,
-        save_video=args.save_video,
-        config_yml=config,
-    )
-    # Stop profiling
-    pr.disable()
+if __name__ == "__main__":
+    main_args = parse_args()
 
-    # Create a StringIO object to hold the profiling results
-    s = io.StringIO()
+    safeAR_frame_bytes = main(main_args)
 
-    # Sort the results by cumulative time spent in the function
-    sort = SortKey.CUMULATIVE
-    ps = pstats.Stats(pr, stream=s).sort_stats(sort)
-    ps.print_stats()
-
-    # Print the profiling results
-    print(s.getvalue())
+    # # DEBUG: save the processed frame
+    # safeAR_frame_array = cp.frombuffer(safeAR_frame_bytes, dtype=cp.uint8)
+    # safeAR_frame_array = safeAR_frame_array.reshape((640, 640, 3))
+    # imageio.imwrite("outputs/img_out2.png", safeAR_frame_array.get())

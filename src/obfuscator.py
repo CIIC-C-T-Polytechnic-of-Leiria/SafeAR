@@ -11,6 +11,8 @@ from cupyx.scipy import ndimage
 class ImageObfuscator:
     def __init__(self, policies: dict):
         self.policies = policies
+        self.sigma = 10
+        self.square = 20
         with open(file="config.yml", mode="r", encoding="utf-8") as file:
             config = yaml.safe_load(file)
             self.available_policies = config["obfuscation_types"]
@@ -40,28 +42,33 @@ class ImageObfuscator:
         img[mask != 0] = 0
         return img
 
-    @staticmethod
-    def apply_blur(image: cp.ndarray, mask: cp.ndarray, sigma: int = 10) -> cp.ndarray:
-        blurred_image = ndimage.gaussian_filter(image, sigma=(sigma, sigma, 0))
+    def apply_blur(self, image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
+        blurred_image = ndimage.gaussian_filter(
+            image, sigma=(self.sigma, self.sigma, 0)
+        )
         image[mask != 0] = blurred_image[mask != 0, :3]
         return image
 
-    @staticmethod
-    def apply_pixelate(
-        image: cp.ndarray, mask: cp.ndarray, square: int = 20
-    ) -> cp.ndarray:
+    def apply_pixelate(self, image: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:
         image_cp = cp.asarray(image, dtype=cp.uint8)
         mask = mask[:, :, cp.newaxis].astype(cp.uint8) * 255
         # Downsampling followed by Upsampling to create the pixelated effect
-        img_small = image_cp[::square, ::square, :]
-        pixelated_img = cp.repeat(cp.repeat(img_small, square, axis=0), square, axis=1)
+        img_small = image_cp[:: self.square, :: self.square, :]
+        pixel_img = cp.repeat(
+            cp.repeat(img_small, self.square, axis=0), self.square, axis=1
+        )
         # Crop the pixelated image to match the shape of the original image
-        pixelated_img = pixelated_img[: image_cp.shape[0], : image_cp.shape[1], :]
+        pixel_img = pixel_img[: image_cp.shape[0], : image_cp.shape[1], :]
         # Apply the pixelation effect only to the masked region
-        final_image = cp.where(mask != 0, pixelated_img, image_cp)
+        final_image = cp.where(mask != 0, pixel_img, image_cp)
         return final_image
 
-    def obfuscate(self, masks: cp.ndarray, image: cp.ndarray, class_ids: list):
+    def obfuscate(
+        self,
+        image: cp.ndarray,
+        masks: cp.ndarray,
+        class_ids: list,
+    ) -> cp.ndarray:
         self.validate_inputs(masks, image)
 
         # Create a copy of the original image

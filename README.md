@@ -147,46 +147,57 @@ Usage
 
 The API can be used both as a command-line tool and as a Python library.
 
-### Command-Line Usage
+### Command-Line Interface
 
-To use the API as a command-line tool, run the following command:
-
-```bash
-python main.py 
-    --model_number MODEL_NUMBER 
-    --class_id_list CLASS_ID_1 CLASS_ID_2 ... 
-    --obfuscation_type_list OBFS_TYPE_1 OBFS_TYPE_2 ... 
-    --img_source IMG_SOURCE 
-    --show_fps
-    --show_boxes
-    --save_video
-```
-
-where:
-
-* `MODEL_NUMBER` is the number of the model to use (0-based index).
-* `CLASS_ID_1 CLASS_ID_2 ...` is a list of class IDs to obfuscate. If model is trained in COCO dataset, see the
-  mapping [here](seg_models/mscoco_classID_labels.txt)
-* `OBFS_TYPE_1 OBFS_TYPE_2 ...` available obfuscation types are `blurring`, `masking`, and `pixelation`.
-* `IMG_SOURCE` is the source of the images to process. This can be a file path, a URL, or a camera index.
-* `--show_fps` is an optional flag to show the frames per second.
-* `--show_boxes` is an optional flag to save the bounding boxes to a file.
-* `--save_video` is an optional flag to save the processed video to a file.
-
-For example:
+The CLI provides a convenient way to obfuscate images using various obfuscation techniques. Here are the available
+options:
 
 ```bash
 python main.py \
-    --model_number 0 \
-    --class_id_list 0 1 2 \
-    --obfuscation_type_list blurring masking pixelation \
-    --img_source 0 --show_fps \
+	--model_number MODEL_NUMBER \
+	--class_id_list CLASS_ID_1 CLASS_ID_2 ... \
+	--obfuscation_type_list OBFS_TYPE_1 OBFS_TYPE_2 ...  \
+	[--square PIXEL_SIZE] \
+	[--sigma BLUR_EFFECT_VALUE]
 ```
 
-This will use the first available model to obfuscate objects with class IDs 0, 1, and 2 in the video stream from the
-default camera, using the `blurring`, `masking`, and `pixelation` obfuscation types, and showing the frames per second
-on
-the screen.
+#### Parameters:
+
+- `MODEL_NUMBER`: Specifies the model to use for object detection. The available models are listed in `config.yml`. The
+  model number is a 0-based index.
+- `CLASS_ID_1 CLASS_ID_2 ...`: A list of class IDs corresponding to the objects you want to obfuscate. Separate multiple
+  class IDs with spaces. If the model is trained on the COCO dataset, refer to the mapping provided
+  in `seg_models/mscoco_classID_labels.txt`.
+- `OBFS_TYPE_1 OBFS_TYPE_2 ...`: Available obfuscation types include `blurring`, `masking`, and `pixelation`. Specify
+  the desired obfuscation type for each class ID.
+- `[--square PIXEL_SIZE]`: Optional. Specifies the size of the square for the pixelation effect. The image will be
+  divided into squares of the specified size, and each square will be replaced with a single color.
+- `[--sigma BLUR_EFFECT_VALUE]`: Optional. Specifies the sigma value for the blurring effect. Higher values result in a
+  stronger blurring effect.
+
+### As a Python Module
+
+You can also use the `SafeARService` class directly in your Python scripts for more flexibility and customization.
+Here's an example usage:
+
+```python
+from main import SafeARService
+
+# Initialize the SafeARService
+safe_ar_service = SafeARService()
+
+# Configure the SafeARService with the desired model number and obfuscation policies
+safe_ar_service.configure(model_number=0, obfuscation_policies={0: "blurring", 1: "blurring"})
+
+# Auxiliary function to read the base64 image from a file
+image_base64 = safe_ar_service.read_base64_image("test_samples/images/img_640x640_base64.txt")
+
+# Image Obfuscation using the SafeARService
+processed_frame_bytes = safe_ar_service.process_frame(image_base64)
+
+# Auxiliary function to save the processed frame to a file
+safe_ar_service.save_processed_frame(processed_frame_bytes, "outputs/img_out.png")
+```
 
 ### Python Library Usage
 
