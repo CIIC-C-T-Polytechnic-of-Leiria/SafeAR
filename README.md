@@ -1,5 +1,6 @@
 <div style="display: flex; align-items: center; justify-content: center;">
-  <img width="100" height="100" src="assets/safeAR_ipl_icon.png">
+
+[//]: # (  <img width="100" height="100" src="assets/safeAR_ipl_icon.png">)
   <h1 style="margin-left: 20px;">SafeAR - Privacy in AR Contexts as a Service</h1>
 </div>
 
@@ -11,23 +12,13 @@ Welcome to SafeAR, a privacy-focused solution designed for augmented reality (AR
 from mobile device cameras and returns a sanitized version of the data, ensuring that sensitive information is obscured.
 
 <p align="center"> <img src="assets/output_12_04_2024-ezgif.com-optimize.gif" width="700px" style="border:3px solid lightgray;"/> </p>
-SafeAR comprises four modules - Preprocessing, Object Detection and Segmentation, Transformation (or Obfuscation), and Post-processing - working together to maintain privacy protection.
 
-<p align="center"> <img src="assets/safeAR_layer_v0.png" width="750px" style="border:3px solid lightgray;"/> </p>
+SafeAR Service receives images for obfuscation along with metadata specifying the classes to be obfuscated and the
+respective method. It returns sanitized images to the client.
+<br>
 
-Upcoming Features
------------------
+<p align="center"> <img src="assets/safear_server" width="700px" style="border:3px solid lightgray;"/> </p>
 
-We are continuously improving and adding new features to our system. Here's what you can expect in the near future:
-
-- **Model selection**: SafeAR will allow users to select from a variety of pre-trained models for object detection and
-  segmentation.
-- **Metadata anonymization**: SafeAR will accept metadata from images or videos and anonymize it before returning it to
-  the user, ensuring privacy.
-- **Sensor data utilization**: Our system will be able to utilize sensor data from the mobile device to enhance
-  performance and provide a better user experience.
-- **Inpainting obfuscation**: Our Obfuscation module will offer inpainting as an obfuscation technique, providing even
-  more options for securing sensitive information
 
 Available Instance Segmentation Models
 --------------------------------------
@@ -59,7 +50,9 @@ safeAR-aaS/
 ├── 🤷🏻‍♀️ .gitignore                # Git ignore file
 ├── 🛠️ config.yml                # Configuration file
 ├── 🐍 main.py                   # Main script to run the API
+├── 📦  setup.py                  # Setup file for the API
 ├── 📜 README.md                 # Readme file
+├── 🐳 Dockerfile                # Dockerfile for containerization
 └── 📜 requirements.txt          # Required packages
 ```
 
@@ -73,34 +66,25 @@ Clone the repository:
 git clone https://github.com/CIIC-C-T-Polytechnic-of-Leiria/SafeAR.git
 cd SafeAR
 
-# Create a new Conda environment (optional)
-conda create -n safear_env python=3.10
-conda activate safear_env
-
-# Install the CUDA Toolkit and cuDNN
-conda install cudatoolkit=11.8
-conda install -c conda-forge cudnn=8.8.0.121
+# Configure conda environment
+conda create -n safeAR python=3.10
+conda activate safeAR
 
 # Install the required packages
 pip install -r requirements.txt
 
-# Install ONNX Runtime with GPU support
-pip install onnxruntime-gpu==1.17.0
 ```
 
 :memo: Note
 <small>
 
-- SafeAR aaS was tested using `Python 3.10.12` environment.
-- For Nvidia GPU computers, install `onnxruntime-gpu` package.
-- For non-Nvidia GPU computers, use `onnxruntime` package.
 - The versions of CUDA, cuDNN, and ONNX Runtime must be compatible with each other and with your GPU. Check
   the [official documentation](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html) to ensure
   compatibility.
   </small>
 
 Model Download and Conversion
------------------------------- 
+-----------------------------
 
 <details>
 <summary> <b>Yolov5-seg</b> model </summary>
@@ -145,8 +129,6 @@ Under construction...
 Usage
 -----
 
-The API can be used both as a command-line tool and as a Python library.
-
 ### Command-Line Interface
 
 The CLI provides a convenient way to obfuscate images using various obfuscation techniques. Here are the available
@@ -181,7 +163,7 @@ You can also use the `SafeARService` class directly in your Python scripts for m
 Here's an example usage:
 
 ```python
-from main import SafeARService
+from safear_service import SafeARService
 
 # Initialize the SafeARService
 safe_ar_service = SafeARService()
@@ -199,9 +181,20 @@ processed_frame_bytes = safe_ar_service.process_frame(image_base64)
 safe_ar_service.save_processed_frame(processed_frame_bytes, "outputs/img_out.png")
 ```
 
-### Python Library Usage
+Upcoming Features
+-----------------
 
-:construction: To be implemented...
+We are continuously improving and adding new features to our system. Here's what you can expect in the near future:
+
+- **Model selection**: SafeAR will allow users to select from a variety of pre-trained models for object detection and
+  segmentation.
+- **Metadata anonymization**: SafeAR will accept metadata from images or videos and anonymize it before returning it to
+  the user, ensuring privacy.
+- **Sensor data utilization**: Our system will be able to utilize sensor data from the mobile device to enhance
+  performance and provide a better user experience.
+- **Inpainting obfuscation**: Our Obfuscation module will offer inpainting as an obfuscation technique, providing even
+  more options for securing sensitive information
+- **Package distribution**: SafeAR will be available as a package on PyPI, making it easier to install and use.
 
 Acknowledgements
 ----------------
@@ -209,15 +202,11 @@ Acknowledgements
 This work is funded by FCT - Fundação para a Ciência e a Tecnologia, I.P., through project with reference
 2022.09235.PTDC.
 
-<!-- Contributing
-------------
-
-TO BE DONE... -->
 
 License
 -------
 
-:construction:To be determined...
+This project is licensed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html).
 
 <p align="center">
 <img src="assets/CIIC_logo_v2.png" width="750px"/>

@@ -13,7 +13,7 @@ class ImageObfuscator:
         self.policies = policies
         self.sigma = 10
         self.square = 20
-        with open(file="config.yml", mode="r", encoding="utf-8") as file:
+        with open(file="../config.yml", mode="r", encoding="utf-8") as file:
             config = yaml.safe_load(file)
             self.available_policies = config["obfuscation_types"]
 

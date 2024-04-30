@@ -7,96 +7,28 @@
     2) Implementar frame obfuscatiom striding - implementar logica que está no Unity
 
     Usage:
-    python main.py --model_number 0 --class_id_list 0 1 2 3  --img_source 0 --obfuscation_type_list blurring blurring blurring blurring
+    python main.py \
+        --model_number 0 \
+        --class_id_list 0 1 \
+        --obfuscation_type_list "pixelation" "blurring" \
+        --image_base64_file "inputs/img_in.txt" \
+        --square 10 \
+        --sigma 5
 """
 
 import argparse
 import importlib
-from typing import Any
-
-import yaml
 
 import src.img_handle
 import src.obfuscator
 import src.seg_yolov8
+from src.safear_service import SafeARService
 
 # Reload the modules
 importlib.reload(src.seg_yolov8)
 importlib.reload(src.img_handle)
 importlib.reload(src.obfuscator)
-
-# Import the classes from the reloaded modules
-from src.seg_yolov8 import Yolov8seg
-from src.obfuscator import ImageObfuscator
-
-# Testing/debugging imports
-import cupy as cp
-import base64
-from io import BytesIO
-import imageio.v2 as imageio
-
-
-class SafeARService:
-
-    def __init__(self):
-        self.obfuscator = None
-        self.model = None
-        self.obfuscation_policies: dict[str, Any] = {}
-
-    def configure(self, model_number: int, obfuscation_policies: dict):
-        config_yml = self.load_config()
-        model_name = list(config_yml["models"].keys())[model_number]
-        model_path = config_yml["models"][model_name]["model_path"]
-
-        self.model = Yolov8seg(model_path=model_path)
-        self.obfuscation_policies = obfuscation_policies
-        self.obfuscator = ImageObfuscator(policies=self.obfuscation_policies)
-
-    def process_frame(self, image_base64: str) -> bytes:
-        image_bytes = base64.b64decode(image_base64)
-        buffer = BytesIO(image_bytes)
-        img_array = imageio.imread(buffer)
-        frame = cp.asarray(img_array)
-
-        # DEBUG: save the input frame
-        # imageio.imwrite("outputs/img_in.png", frame.get())
-
-        boxes, masks = self.model(frame)
-        safe_frame = self.obfuscator.obfuscate(
-            image=frame, masks=masks, class_ids=[int(box[5]) for box in boxes]
-        )
-
-        safe_frame = safe_frame.astype(cp.uint8)
-        safe_frame_bytes = safe_frame.tobytes()
-        return safe_frame_bytes
-
-    @staticmethod
-    def read_base64_image(file_path):
-        with open(file_path, "r") as f:
-            image_base64 = f.read()
-        image_data = base64.b64decode(image_base64)
-        return image_data
-
-    @staticmethod
-    def save_processed_frame(frame_bytes, output_path):
-        frame_array = cp.frombuffer(frame_bytes, dtype=cp.uint8)
-        if len(frame_array) != 640 * 640 * 3:
-            raise ValueError("Incorrect size of frame data")
-        frame_array = frame_array.reshape((640, 640, 3))
-        # Convert cupy array to numpy array
-        frame_array = cp.asnumpy(frame_array)
-        imageio.imwrite(output_path, frame_array)
-
-    @staticmethod
-    def load_config() -> dict:
-        with open(file="config.yml", mode="r", encoding="utf-8") as file:
-            config_yml = yaml.safe_load(file)
-        return config_yml
-
-    @staticmethod
-    def list_models() -> list:
-        config_yml = SafeARService.load_config()
-        return list(config_yml["models"].keys())
+importlib.reload(src.safear_service)
 
 
 def main(args):
@@ -182,7 +114,11 @@ if __name__ == "__main__":
 
     safeAR_frame_bytes = main(main_args)
 
+    # safeAR_image_base64 = base64.b64encode(safeAR_frame_bytes).decode("utf-8")
+
     # # DEBUG: save the processed frame
+    # import cupy as cp
+    # import imageio
     # safeAR_frame_array = cp.frombuffer(safeAR_frame_bytes, dtype=cp.uint8)
     # safeAR_frame_array = safeAR_frame_array.reshape((640, 640, 3))
     # imageio.imwrite("outputs/img_out2.png", safeAR_frame_array.get())

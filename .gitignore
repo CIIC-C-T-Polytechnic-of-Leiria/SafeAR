@@ -33,8 +33,9 @@ opencv_install.md
 Model_variation.md
 qodana.yaml
 frame_in.jpg
-image.png
+assets/image.png
 img_after_processing.png
+setup.py
 
 # folders to ignore
 /backup_cv2

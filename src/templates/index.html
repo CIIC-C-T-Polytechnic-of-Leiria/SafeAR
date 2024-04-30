@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeAR Image Obfuscation Service</title>
+</head>
+<body>
+<h1>SafeAR - Obfuscation Service</h1>
+
+<div id="service-status">
+    <h2>Service Status</h2>
+    <p id="status-message">Checking...</p>
+</div>
+<div id="service-health">
+    <h2>Service Health</h2>
+    <p id="health-message">Checking...</p>
+</div>
+
+
+<script>
+    // Update Service Status and Health
+    fetch('http://localhost:5000/status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('status-message').textContent = data.status;
+        })
+        .catch(error => {
+            document.getElementById('status-message').textContent = 'Error fetching status';
+        });
+
+    fetch('http://localhost:5000/health')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('health-message').textContent = data.status;
+        })
+        .catch(error => {
+            document.getElementById('health-message').textContent = 'Error fetching health';
+        });
+
+</script>
+</body>
+</html>
