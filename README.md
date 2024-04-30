@@ -17,7 +17,7 @@ SafeAR Service receives images for obfuscation along with metadata specifying th
 respective method. It returns sanitized images to the client.
 <br>
 
-<p align="center"> <img src="assets/safear_server" width="700px" style="border:3px solid lightgray;"/> </p>
+<p align="center"> <img src="assets/safear_server" width="600px" style="border:3px solid lightgray;"/> </p>
 
 
 Available Instance Segmentation Models
