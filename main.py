@@ -2,7 +2,7 @@
  TODO:
     ! Implementar "warm-up" do modelo (5 ciclos de inferencia)- to do
     !! O que deve e tem de ir nos metadados do frame, e como pode ser codificado no base64?
-    1.2) Criar variáviel de entrada e saída para o sistema de obfuscação - to do
+    1.2) Criar variável de entrada e saída para o sistema de obfuscação - to do
     1.3) Testar output dos modelos Yolov9, Gelan e RTMDet e implementar class para adaptar a saída - 30% done
     2) Implementar frame obfuscatiom striding - implementar logica que está no Unity
 
@@ -19,15 +19,11 @@
 import argparse
 import importlib
 
-import src.img_handle
-import src.obfuscator
 import src.seg_yolov8
 from src.safear_service import SafeARService
 
 # Reload the modules
 importlib.reload(src.seg_yolov8)
-importlib.reload(src.img_handle)
-importlib.reload(src.obfuscator)
 importlib.reload(src.safear_service)
 
 

@@ -1,5 +1,5 @@
 import base64
-import importlib
+import os
 from io import BytesIO
 from typing import Any
 
@@ -7,16 +7,15 @@ import cupy as cp
 import imageio
 import yaml
 
-import obfuscator
-import seg_yolov8
+from src.obfuscator import ImageObfuscator
+from src.seg_yolov8 import Yolov8seg
 
-# Reload the modules
-importlib.reload(seg_yolov8)
-importlib.reload(obfuscator)
 
-# Import the classes from the reloaded modules
-from seg_yolov8 import Yolov8seg
-from obfuscator import ImageObfuscator
+# # Reload the modules
+# importlib.reload(seg_yolov8)
+# importlib.reload(obfuscator)
+#
+# # Import the classes from the reloaded modules
 
 
 class SafeARService:
@@ -56,7 +55,7 @@ class SafeARService:
         frame = cp.asarray(img_array)
 
         # DEBUG: save the input frame
-        imageio.imwrite("outputs/img_in_flask.png", frame.get())
+        imageio.imwrite("outputs/img_in_flask_2.png", frame.get())
 
         boxes, masks = self.model(frame)
         safe_frame = self.obfuscator.obfuscate(
@@ -86,7 +85,14 @@ class SafeARService:
 
     @staticmethod
     def load_config() -> dict:
-        with open(file="../config.yml", mode="r", encoding="utf-8") as file:
+        # Get the current directory
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+        # Get the parent directory
+        parent_directory = os.path.dirname(current_directory)
+        # Construct the path to the config.yml file
+        config_file_path = os.path.join(parent_directory, "config.yml")
+
+        with open(file=config_file_path, mode="r", encoding="utf-8") as file:
             config_yml = yaml.safe_load(file)
         return config_yml
 

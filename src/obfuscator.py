@@ -3,6 +3,8 @@ This module contains the ImageObfuscator class, which is used to obfuscate image
 set of masks and policies.
 """
 
+import os
+
 import cupy as cp
 import yaml
 from cupyx.scipy import ndimage
@@ -10,14 +12,20 @@ from cupyx.scipy import ndimage
 
 class ImageObfuscator:
     def __init__(self, policies: dict):
-        self.policies = policies
-        self.sigma = 10
-        self.square = 20
-        with open(file="../config.yml", mode="r", encoding="utf-8") as file:
-            config = yaml.safe_load(file)
-            self.available_policies = config["obfuscation_types"]
+        # Get the current directory
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+        # Get the parent directory
+        parent_directory = os.path.dirname(current_directory)
+        # Construct the path to the config.yml file
+        config_file_path = os.path.join(parent_directory, "config.yml")
 
-    def validate_inputs(self, masks: cp.ndarray, image: cp.ndarray):
+        with open(file=config_file_path, mode="r", encoding="utf-8") as file:
+            self.config_yml = yaml.safe_load(file)
+        self.policies = policies
+        # self.colors_dict = self.load_colors_dict()
+
+    @staticmethod
+    def validate_inputs(masks: cp.ndarray, image: cp.ndarray):
         if (
             masks is not None
             and len(masks) > 0
@@ -32,9 +40,9 @@ class ImageObfuscator:
                 f"image has shape {image.shape} and dtype {image.dtype}, expected shape (H, W, 3) and dtype uint8"
             )
 
-        for policy in self.policies.values():
-            if policy not in self.available_policies:
-                raise ValueError(f"Unknown policy: {policy}")
+        # for policy in self.policies.values():
+        #     if policy not in self.available_policies:
+        #         raise ValueError(f"Unknown policy: {policy}")
 
     @staticmethod
     def apply_mask(img: cp.ndarray, mask: cp.ndarray) -> cp.ndarray:

@@ -152,7 +152,7 @@ class Yolov8seg:
             )
 
             b_boxes = self.resize_bboxes(
-                box_scr_cls_mskc[..., :4], ratios, pad, img_0.shape[0:2]
+                box_scr_cls_mskc[..., :4], ratios, img_0.shape[0:2]
             )
 
             end_time4 = time()
