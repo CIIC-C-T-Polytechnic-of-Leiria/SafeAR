@@ -11,7 +11,7 @@
 Welcome to SafeAR, a privacy-focused solution designed for augmented reality (AR) contexts. Our system processes input
 from mobile device cameras and returns a sanitized version of the data, ensuring that sensitive information is obscured.
 
-<p align="center"> <img src="assets/output_12_04_2024-ezgif.com-optimize.gif" width="700px" style="border:3px solid lightgray;"/> </p>
+<p align="center"> <img src="assets/output.gif" width="650px" style="border:3px solid lightgray;"/> </p>
 
 SafeAR Service receives images for obfuscation along with metadata specifying the classes to be obfuscated and the
 respective method. It returns sanitized images to the client.
@@ -23,18 +23,19 @@ respective method. It returns sanitized images to the client.
 Available Instance Segmentation Models
 --------------------------------------
 
-:construction:In development...
+🚧 : Under construction...
 
 | Model       | Size (MB) | Training Data | Classes | Inference Time CPU (ms)\* | Inference Time GPU (ms)\* |
 |-------------|-----------|---------------|---------|---------------------------|---------------------------|
 | YOLOv5n-seg | 8.5       | COCO 2017     | 80      | -                         | -                         |
-| YOLOv8n-seg | 13.8      | COCO 2017     | 80      |                           | ~20                       |
+| YOLOv8n-seg | 13.8      | COCO 2017     | 80      | -                         | ~20                       |
 | YOLOv9c-seg | 111.1     | COCO 2017     | 80      | -                         | -                         |
 | gelan-c-seg | 110.0     | COCO 2017     | 80      | -                         | -                         |
 | RTMDet      | -         | COCO 2017     | 80      | -                         | -                         |
 
-<small>\*Measured on: HP Victus, 32 GB of memory, Intel i5-12500Hx16 processor, Nvidia GeForceRTX 4060, Pop!\_OS 22.04
-LTS operating system</small>
+Note:
+<small> Measured on: HP Victus, 32 GB of memory, Intel i5-12500Hx16 processor, Nvidia GeForceRTX 4060, Pop!\_OS 22.04
+LTS operating system </small>
 
 Repository Structure
 --------------------
@@ -50,7 +51,7 @@ safeAR-aaS/
 ├── 🤷🏻‍♀️ .gitignore                # Git ignore file
 ├── 🛠️ config.yml                # Configuration file
 ├── 🐍 main.py                   # Main script to run the API
-├── 📦  setup.py                  # Setup file for the API
+├── 📦 setup.py                  # Setup file for the API
 ├── 📜 README.md                 # Readme file
 ├── 🐳 Dockerfile                # Dockerfile for containerization
 └── 📜 requirements.txt          # Required packages
@@ -72,16 +73,14 @@ conda activate safeAR
 
 # Install the required packages
 pip install -r requirements.txt
-
 ```
 
-:memo: Note
+Note:
 <small>
-
-- The versions of CUDA, cuDNN, and ONNX Runtime must be compatible with each other and with your GPU. Check
-  the [official documentation](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html) to ensure
-  compatibility.
-  </small>
+The versions of CUDA, cuDNN, and ONNX Runtime must be compatible with each other and with your GPU.
+Check the [official documentation](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html) to
+ensure compatibility.
+</small>
 
 Model Download and Conversion
 -----------------------------
@@ -211,5 +210,3 @@ This project is licensed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html
 <p align="center">
 <img src="assets/CIIC_logo_v2.png" width="750px"/>
 </p>
-
-

@@ -7,13 +7,11 @@ import cupy as cp
 import imageio
 import yaml
 
-import img_handle
 import obfuscator
 import seg_yolov8
 
 # Reload the modules
 importlib.reload(seg_yolov8)
-importlib.reload(img_handle)
 importlib.reload(obfuscator)
 
 # Import the classes from the reloaded modules
