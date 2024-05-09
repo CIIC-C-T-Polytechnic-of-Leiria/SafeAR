@@ -56,7 +56,7 @@ def camera_stream():
     return processed_image_base64
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Flask app")
+    parser = argparse.ArgumentParser(description="SafeAR Service")
     parser.add_argument("--port", default=8080, type=int, help="port number") 
     args = parser.parse_args()
     app.run(host="0.0.0.0", port=args.port) 
