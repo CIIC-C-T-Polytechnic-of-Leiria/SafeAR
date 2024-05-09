@@ -9,12 +9,12 @@ models:
     <<: *defaults
     model_path: "seg_models/yolov8n-seg.onnx"
 
-  yolov9:
-    <<: *defaults
-    model_path: "seg_models/yolov9c-seg.onnx"
+  # yolov9:
+  #   <<: *defaults
+  #   model_path: "seg_models/yolov9c-seg.onnx"
 
-  yolov5:
-    <<: *defaults
-    model_path: "seg_models/yolov5s-seg.onnx"
+  # yolov5:
+  #   <<: *defaults
+  #   model_path: "seg_models/yolov5s-seg.onnx"
 
 obfuscation_types: [ "pixelation", "blurring", "masking", "none" ]

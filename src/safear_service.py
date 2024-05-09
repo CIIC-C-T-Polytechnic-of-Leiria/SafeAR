@@ -7,18 +7,19 @@ import cupy as cp
 import imageio
 import yaml
 
-import img_handle
-import obfuscator
-import seg_yolov8
+#import img_handle
+import src.obfuscator
+import src.seg_yolov8
 
 # Reload the modules
-importlib.reload(seg_yolov8)
-importlib.reload(img_handle)
-importlib.reload(obfuscator)
+importlib.reload(src.seg_yolov8)
+#importlib.reload(img_handle)
+importlib.reload(src.obfuscator)
 
 # Import the classes from the reloaded modules
-from seg_yolov8 import Yolov8seg
-from obfuscator import ImageObfuscator
+from src.seg_yolov8 import Yolov8seg
+from src.obfuscator import ImageObfuscator
+import os
 
 
 class SafeARService:
@@ -88,7 +89,8 @@ class SafeARService:
 
     @staticmethod
     def load_config() -> dict:
-        with open(file="../config.yml", mode="r", encoding="utf-8") as file:
+        filepath = os.path.join(os.path.dirname(__file__), os.pardir, "config.yml")
+        with open(file=filepath, mode="r", encoding="utf-8") as file:
             config_yml = yaml.safe_load(file)
         return config_yml
 

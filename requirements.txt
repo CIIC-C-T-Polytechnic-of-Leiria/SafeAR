@@ -10,3 +10,5 @@ pillow~=10.3.0
 imageio~=2.34.1
 setuptools~=69.5.1
 flask
+obfuscator
+ultralytics

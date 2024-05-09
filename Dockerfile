@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8080
 
 # Run Flask app
-CMD ["python3", "src/flask_server.py"]
+CMD ["python", "server_http.py"]
