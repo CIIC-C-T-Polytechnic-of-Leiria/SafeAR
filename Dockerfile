@@ -1,6 +1,9 @@
 # Description: Dockerfile for SafeAR
 FROM python:3.10
 
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+# FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
+
 # Set the working directory
 WORKDIR /SafeAR
 
