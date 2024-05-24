@@ -11,13 +11,13 @@
 Welcome to SafeAR, a privacy-focused solution designed for augmented reality (AR) contexts. Our system processes input
 from mobile device cameras and returns a sanitized version of the data, ensuring that sensitive information is obscured.
 
-<p align="center"> <img src="assets/output.gif" width="650px" style="border:3px solid lightgray;"/> </p>
+<p align="center"> <img src="assets/output.gif" width="650px" style="border:3px solid lightgray;" alt=""/> </p>
 
 SafeAR Service receives images for obfuscation along with metadata specifying the classes to be obfuscated and the
 respective method. It returns sanitized images to the client.
 <br>
 
-<p align="center"> <img src="assets/safe_ar_overview.png" width="650px" style="border:2px solid lightgray;"/> </p>
+<p align="center"> <img src="assets/safe_ar_overview.png" width="650px" style="border:2px solid lightgray;" alt=""/> </p>
 
 
 Available Instance Segmentation Models
@@ -60,11 +60,9 @@ safeAR-aaS/
 Installation
 ------------
 
-Clone the repository:
+[**Conda**](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) Environment:
 
-Nota: Miniconda
-
-```sh
+```bash
 # Clone the repository
 git clone https://github.com/CIIC-C-T-Polytechnic-of-Leiria/SafeAR.git
 cd SafeAR
@@ -75,6 +73,13 @@ conda activate safeAR
 
 # Install the required packages
 pip install -r requirements.txt
+```
+
+[**Docker**](https://www.docker.com/get-started/) Image:
+
+```bash
+# Build the Docker image
+docker build -t safear .
 ```
 
 Note:
@@ -94,7 +99,7 @@ Model Download and Conversion
 You may run this Colab [script](https://colab.research.google.com/drive/1BYFWd_h6ffWTa6SXqllYfYVxjxYj10tf?usp=sharing)
 to download the model and convert them to ONNX format.
 
-Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
+Afterward, move the exported `onnx` model(s) to the `seg_models` directory.
 
 </details>
 
@@ -105,7 +110,7 @@ Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
 You may download the model from the Ultralytics
 repository: [Yolov8 Repository](https://docs.ultralytics.com/models/yolov8/#performance-metrics)
 
-Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
+Afterward, move the exported `onnx` model(s) to the `seg_models` directory.
 
 </details>
 
@@ -116,7 +121,7 @@ Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
 You may run this Colab [script](https://colab.research.google.com/drive/1Sv6cvCuAHWOOouXKy1dJ-G18RtMSk7dA?usp=sharing)
 to download the models and convert them to ONNX format.
 
-Afterwards, move the exported `onnx` model(s) to the `seg_models` directory.
+Afterward, move the exported `onnx` model(s) to the `seg_models` directory.
 </details>
 
 
@@ -148,7 +153,6 @@ python main.py \
 Docker:
 
 ```bash
-docker build -t safear .
 docker run -it safear --model_number 0 \
                       --class_id_list 0 \
                       --obfuscation_type_list blurring \
@@ -157,8 +161,8 @@ docker run -it safear --model_number 0 \
 
 #### Parameters:
 
-- `MODEL_NUMBER`: Specifies the model to use for object detection. The available models are listed in `config.yml`. The
-  model number is a 0-based index.
+- `MODEL_NUMBER`: Specifies the model to use for object detection. The available models are listed
+  in [`config.yml`](config.yml). The model number is a 0-based index.
 - `CLASS_ID_1 CLASS_ID_2 ...`: A list of class IDs corresponding to the objects you want to obfuscate. Separate multiple
   class IDs with spaces. If the model is trained on the COCO dataset, refer to the mapping provided
   in `seg_models/mscoco_classID_labels.txt`.
@@ -221,5 +225,5 @@ License
 This project is licensed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html).
 
 <p align="center">
-<img src="assets/CIIC_logo_v2.png" width="750px"/>
+<img src="assets/CIIC_logo_v2.png" width="750px" alt=""/>
 </p>
