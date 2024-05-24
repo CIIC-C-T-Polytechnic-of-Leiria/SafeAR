@@ -17,7 +17,7 @@ SafeAR Service receives images for obfuscation along with metadata specifying th
 respective method. It returns sanitized images to the client.
 <br>
 
-<p align="center"> <img src="assets/safear_server" width="600px" style="border:3px solid lightgray;"/> </p>
+<p align="center"> <img src="assets/safe_ar_overview.png" width="650px" style="border:2px solid lightgray;"/> </p>
 
 
 Available Instance Segmentation Models
@@ -61,6 +61,8 @@ Installation
 ------------
 
 Clone the repository:
+
+Nota: Miniconda
 
 ```sh
 # Clone the repository
@@ -137,9 +139,20 @@ options:
 python main.py \
 	--model_number MODEL_NUMBER \
 	--class_id_list CLASS_ID_1 CLASS_ID_2 ... \
-	--obfuscation_type_list OBFS_TYPE_1 OBFS_TYPE_2 ...  \
+	--obfuscation_type_list OBFS_TYPE_1 OBFS_TYPE_2 ... \
+	--image_base64_file IMAGE_BASE64_FILE \
 	[--square PIXEL_SIZE] \
 	[--sigma BLUR_EFFECT_VALUE]
+```
+
+Docker:
+
+```bash
+docker build -t safear .
+docker run -it safear --model_number 0 \
+                      --class_id_list 0 \
+                      --obfuscation_type_list blurring \
+                      --image_base64_file test_samples/images/img_640x640_base64.txt
 ```
 
 #### Parameters:

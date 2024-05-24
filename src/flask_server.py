@@ -20,7 +20,7 @@ Usage:
     --data "$(base64 -i image.jpg)" http://localhost:5000/obfuscate
 
 Note:
-    - kill the server: curl -X POST http://localhost:5000/shutdown or ctrl+c
+    - kill the server: curl -X POST http://localhost:5000/shutdown or CTRL+C
 """
 
 import base64
