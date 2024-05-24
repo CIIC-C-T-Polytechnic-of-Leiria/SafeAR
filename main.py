@@ -18,6 +18,7 @@
 
 import argparse
 import importlib
+import os
 
 import src.seg_yolov8
 from src.safear_service import SafeARService
@@ -97,6 +98,10 @@ def parse_args():
 
     # Create the obfuscate_policies dictionary directly in the parser
     args.obfuscate_policies = dict(zip(args.class_id_list, args.obfuscation_type_list))
+
+    # Print the absolute path of the file
+    abs_path = os.path.abspath(args.image_base64_file)
+    print(f"Absolute path of the file: {abs_path}")
 
     # Read the Base64-encoded image string from the file
     with open(args.image_base64_file, "r") as f:

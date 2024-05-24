@@ -18,3 +18,6 @@ models:
     model_path: "seg_models/yolov5s-seg.onnx"
 
 obfuscation_types: [ "pixelation", "blurring", "masking", "none" ]
+
+sigma: 0.5
+square: 10

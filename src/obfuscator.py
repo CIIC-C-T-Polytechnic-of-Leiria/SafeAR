@@ -23,6 +23,8 @@ class ImageObfuscator:
             self.config_yml = yaml.safe_load(file)
         self.policies = policies
         # self.colors_dict = self.load_colors_dict()
+        self.square = self.config_yml["square"]
+        self.sigma = self.config_yml["sigma"]
 
     @staticmethod
     def validate_inputs(masks: cp.ndarray, image: cp.ndarray):
