@@ -36,6 +36,7 @@ frame_in.jpg
 assets/image.png
 img_after_processing.png
 setup.py
+backup_cv2.zip
 
 # folders to ignore
 /backup_cv2
@@ -49,4 +50,9 @@ setup.py
 *.prof
 *.deb
 *.log
+
+/Assets
+/ProjectSettings
+/Packages
+/UserSettings
 
