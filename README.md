@@ -1,10 +1,12 @@
-<div style="display: flex; align-items: center; justify-content: center;">
+<!-- <div style="display: flex; align-items: center; justify-content: center;">
 
 [//]: # (  <img width="100" height="100" src="assets/safeAR_ipl_icon.png">)
-  <h1 style="margin-left: 20px;">SafeAR - Privacy in AR Contexts as a Service</h1>
-</div>
+  <h1 style="margin-left: 20px;">SafeAR - Privacy in AR Contexts as a Service </h1>
+</div>-->
 
 <!-- <div align="center"> <img width="100" height="100" src="assets/safeAR_ipl_icon.png"> <h1>SafeAR - Privacy in AR Contexts as a Service</h1> </div> -->
+
+# SafeAR - Privacy in AR Contexts as a Service
 
 ### Overview
 
@@ -20,22 +22,7 @@ respective method. It returns sanitized images to the client.
 <p align="center"> <img src="assets/safe_ar_overview.png" width="650px" style="border:2px solid lightgray;" alt=""/> </p>
 
 
-Available Instance Segmentation Models
---------------------------------------
 
-🚧 : Under construction...
-
-| Model       | Size (MB) | Training Data | Classes | Inference Time CPU (ms)\* | Inference Time GPU (ms)\* |
-|-------------|-----------|---------------|---------|---------------------------|---------------------------|
-| YOLOv5n-seg | 8.5       | COCO 2017     | 80      | -                         | -                         |
-| YOLOv8n-seg | 13.8      | COCO 2017     | 80      | -                         | ~20                       |
-| YOLOv9c-seg | 111.1     | COCO 2017     | 80      | -                         | -                         |
-| gelan-c-seg | 110.0     | COCO 2017     | 80      | -                         | -                         |
-| RTMDet      | -         | COCO 2017     | 80      | -                         | -                         |
-
-Note:
-<small> Measured on: HP Victus, 32 GB of memory, Intel i5-12500Hx16 processor, Nvidia GeForceRTX 4060, Pop!\_OS 22.04
-LTS operating system </small>
 
 Repository Structure
 --------------------
@@ -132,25 +119,55 @@ Under construction...
 
 </details>
 
+
+Instance Segmentation Models Comparison
+---------------------------------------
+<details>
+<summary> 🚧 : Under construction... </summary>
+<br>
+
+| Model       | Size (MB) | Training Data | Classes | Inference Time CPU (ms)\* | Inference Time GPU (ms)\* |
+|-------------|-----------|---------------|---------|---------------------------|---------------------------|
+| YOLOv5n-seg | 8.5       | COCO 2017     | 80      | -                         | -                         |
+| YOLOv8n-seg | 13.8      | COCO 2017     | 80      | -                         | ~20                       |
+| YOLOv9c-seg | 111.1     | COCO 2017     | 80      | -                         | -                         |
+| gelan-c-seg | 110.0     | COCO 2017     | 80      | -                         | -                         |
+| RTMDet      | -         | COCO 2017     | 80      | -                         | -                         |
+
+Note:
+<small> Measured on: HP Victus, 32 GB of memory, Intel i5-12500Hx16 processor, Nvidia GeForceRTX 4060, Pop!\_OS 22.04
+LTS operating system </small>
+</details>
+
+
 Usage
------
+--------
 
 ### Command-Line Interface
 
-The CLI provides a convenient way to obfuscate images using various obfuscation techniques. Here are the available
-options:
+The CLI provides a convenient way to obfuscate images using various obfuscation techniques.
+Here's an example command to get you started:
 
 ```bash
 python main.py \
-	--model_number MODEL_NUMBER \
-	--class_id_list CLASS_ID_1 CLASS_ID_2 ... \
-	--obfuscation_type_list OBFS_TYPE_1 OBFS_TYPE_2 ... \
-	--image_base64_file IMAGE_BASE64_FILE \
-	[--square PIXEL_SIZE] \
-	[--sigma BLUR_EFFECT_VALUE]
+    --model_number 0 \
+    --class_id_list 0 \
+    --obfuscation_type_list blurring \
+    --image_base64_file test_samples/images/img_640x640_base64.txt
 ```
 
-Docker:
+| Parameters              | Description                                                               | Required |
+|-------------------------|---------------------------------------------------------------------------|----------|
+| --model_number          | Model number for object detection (0-based index)                         | Yes      |
+| --class_id_list         | Space-separated list of class IDs to obfuscate                            | Yes      |
+| --obfuscation_type_list | Space-separated list of obfuscation types (blurring, masking, pixelation) | Yes      |
+| --image_base64_file     | Path to the base64-encoded image file                                     | Yes      |
+| --square                | Optional: size of the square for pixelation effect                        | No       |
+| --sigma                 | Optional: sigma value for blurring effect                                 | No       |
+
+#### Docker Example
+
+You can also use Docker to run the CLI:
 
 ```bash
 docker run -it safear --model_number 0 \
@@ -159,21 +176,9 @@ docker run -it safear --model_number 0 \
                       --image_base64_file test_samples/images/img_640x640_base64.txt
 ```
 
-#### Parameters:
+*Note*: The Docker command is just an example and may need to be modified to fit your specific use case.
 
-- `MODEL_NUMBER`: Specifies the model to use for object detection. The available models are listed
-  in [`config.yml`](config.yml). The model number is a 0-based index.
-- `CLASS_ID_1 CLASS_ID_2 ...`: A list of class IDs corresponding to the objects you want to obfuscate. Separate multiple
-  class IDs with spaces. If the model is trained on the COCO dataset, refer to the mapping provided
-  in `seg_models/mscoco_classID_labels.txt`.
-- `OBFS_TYPE_1 OBFS_TYPE_2 ...`: Available obfuscation types include `blurring`, `masking`, and `pixelation`. Specify
-  the desired obfuscation type for each class ID.
-- `[--square PIXEL_SIZE]`: Optional. Specifies the size of the square for the pixelation effect. The image will be
-  divided into squares of the specified size, and each square will be replaced with a single color.
-- `[--sigma BLUR_EFFECT_VALUE]`: Optional. Specifies the sigma value for the blurring effect. Higher values result in a
-  stronger blurring effect.
-
-### As a Python Module
+### Python Module usage
 
 You can also use the `SafeARService` class directly in your Python scripts for more flexibility and customization.
 Here's an example usage:
@@ -197,20 +202,16 @@ processed_frame_bytes = safe_ar_service.process_frame(image_base64)
 safe_ar_service.save_processed_frame(processed_frame_bytes, "outputs/img_out.png")
 ```
 
-Upcoming Features
------------------
+To-Do
+-----
 
-We are continuously improving and adding new features to our system. Here's what you can expect in the near future:
+Here are the main tasks we plan to tackle in the near future:
 
-- **Model selection**: SafeAR will allow users to select from a variety of pre-trained models for object detection and
-  segmentation.
-- **Metadata anonymization**: SafeAR will accept metadata from images or videos and anonymize it before returning it to
-  the user, ensuring privacy.
-- **Sensor data utilization**: Our system will be able to utilize sensor data from the mobile device to enhance
-  performance and provide a better user experience.
-- **Inpainting obfuscation**: Our Obfuscation module will offer inpainting as an obfuscation technique, providing even
-  more options for securing sensitive information
-- **Package distribution**: SafeAR will be available as a package on PyPI, making it easier to install and use.
+- **Model selection**: Enable users to choose from multiple pre-trained models.
+- **Metadata anonymization**: Implement metadata anonymization for enhanced privacy.
+- **Sensor data utilization**: Leverage mobile device sensor data to boost performance.
+- **Inpainting obfuscation**: Add inpainting as an obfuscation technique.
+- **Package distribution**: Publish SafeAR as a PyPI package for easier installation.
 
 Acknowledgements
 ----------------
