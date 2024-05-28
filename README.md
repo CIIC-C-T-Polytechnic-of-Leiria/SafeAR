@@ -22,8 +22,6 @@ respective method. It returns sanitized images to the client.
 <p align="center"> <img src="assets/safe_ar_overview.png" width="650px" style="border:2px solid lightgray;" alt=""/> </p>
 
 
-
-
 Repository Structure
 --------------------
 
@@ -72,12 +70,9 @@ ensure compatibility.
 [**Docker**](https://www.docker.com/get-started/) Image:
 
 Install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html),
-if not already installed.
-
-In the project root directory, build the Docker image:
+if not already installed. In the project root directory, build the Docker image:
 
  ```bash
- # Build the Docker image
  docker build --rm -t safear:v1 .
  ```
 
