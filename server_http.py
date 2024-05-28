@@ -19,7 +19,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template('src/templates/index.html')
+    return render_template('index.html')
+
+@app.route("/test")
+def test():
+    return "rota funcional"
 
 @app.route('/video', methods=['GET', 'POST'])
 def camera_stream():
@@ -57,6 +61,6 @@ def camera_stream():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SafeAR Service")
-    parser.add_argument("--port", default=8080, type=int, help="port number") 
+    parser.add_argument("--port", default=8081, type=int, help="port number") 
     args = parser.parse_args()
     app.run(host="0.0.0.0", port=args.port) 

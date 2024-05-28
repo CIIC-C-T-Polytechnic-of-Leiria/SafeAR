@@ -11,8 +11,8 @@ ADD . /SafeAR
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 6666 available to the world outside this container
-EXPOSE 6666
+# Make port 8081 available to the world outside this container
+EXPOSE 8081
 
 # Run Flask app
 CMD ["python", "server_http.py"]
