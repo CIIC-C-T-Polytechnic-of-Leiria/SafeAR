@@ -71,17 +71,15 @@ ensure compatibility.
 
 [**Docker**](https://www.docker.com/get-started/) Image:
 
-1.
-
 Install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html),
 if not already installed.
 
-2. In the project root directory, build the Docker image:
+In the project root directory, build the Docker image:
 
-    ```bash
-    # Build the Docker image
-    docker build --rm -t safear:v1 .
-    ```
+ ```bash
+ # Build the Docker image
+ docker build --rm -t safear:v1 .
+ ```
 
 Model Download and Conversion
 -----------------------------
