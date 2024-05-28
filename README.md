@@ -62,19 +62,26 @@ conda activate safeAR
 pip install -r requirements.txt
 ```
 
-[**Docker**](https://www.docker.com/get-started/) Image:
-
-```bash
-# Build the Docker image
-docker build -t safear .
-```
-
 Note:
 <small>
 The versions of CUDA, cuDNN, and ONNX Runtime must be compatible with each other and with your GPU.
 Check the [official documentation](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html) to
 ensure compatibility.
 </small>
+
+[**Docker**](https://www.docker.com/get-started/) Image:
+
+1.
+
+Install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html),
+if not already installed.
+
+2. In the project root directory, build the Docker image:
+
+    ```bash
+    # Build the Docker image
+    docker build --rm -t safear:v1 .
+    ```
 
 Model Download and Conversion
 -----------------------------
@@ -111,14 +118,12 @@ to download the models and convert them to ONNX format.
 Afterward, move the exported `onnx` model(s) to the `seg_models` directory.
 </details>
 
-
 <details>
 <summary> <b>RTMDet</b> model </summary>
 <br>
 Under construction...
 
 </details>
-
 
 Instance Segmentation Models Comparison
 ---------------------------------------

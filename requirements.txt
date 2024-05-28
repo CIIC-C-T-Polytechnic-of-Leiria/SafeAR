@@ -11,4 +11,5 @@ imageio ~= 2.34.1
 setuptools ~= 69.5.1
 flask
 
+# Inclide cuda toolkit and cudnn in the docker image
 # pip install cucim-cu12==24.4.0 --no-binary :all:
