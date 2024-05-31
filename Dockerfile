@@ -2,7 +2,7 @@
 FROM python:3.10
 
 # 12.4.1-runtime-ubuntu22.04 (12.4.1/ubuntu22.04/runtime/Dockerfile)
-#FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+# FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 # https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 # FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 

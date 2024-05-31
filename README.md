@@ -54,7 +54,9 @@ cd SafeAR
 
 # Configure conda environment
 conda create -n safeAR python=3.10
-conda activate safeAR
+
+# Install CUDA and cuDNN (to use NVidia GPU)
+conda install cudatoolkit=12.2 cudnn= 8.9.2.26 -c conda-forge 
 
 # Install the required packages
 pip install -r requirements.txt
