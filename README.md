@@ -134,7 +134,7 @@ Instance Segmentation Models Comparison
 | gelan-c-seg | 110.0     | COCO 2017     | 80      | -                         | -                         |
 | RTMDet      | -         | COCO 2017     | 80      | -                         | -                         |
 
-Note:
+*Note:*
 <small> Measured on: HP Victus, 32 GB of memory, Intel i5-12500Hx16 processor, Nvidia GeForceRTX 4060, Pop!\_OS 22.04
 LTS operating system </small>
 </details>
@@ -156,18 +156,16 @@ python main.py \
     --image_base64_file test_samples/images/img_640x640_base64.txt
 ```
 
-| Parameters              | Description                                                               | Required |
-|-------------------------|---------------------------------------------------------------------------|----------|
-| --model_number          | Model number for object detection (0-based index)                         | Yes      |
-| --class_id_list         | Space-separated list of class IDs to obfuscate                            | Yes      |
-| --obfuscation_type_list | Space-separated list of obfuscation types (blurring, masking, pixelation) | Yes      |
-| --image_base64_file     | Path to the base64-encoded image file                                     | Yes      |
-| --square                | Optional: size of the square for pixelation effect                        | No       |
-| --sigma                 | Optional: sigma value for blurring effect                                 | No       |
+| Parameters              | Description                                                                            | Required |
+|-------------------------|----------------------------------------------------------------------------------------|----------|
+| --model_number          | Model number for object detection (0-based index)                                      | Yes      |
+| --class_id_list         | Space-separated [list of class IDs](assets/coco_class_list.txt) to obfuscate           | Yes      |
+| --obfuscation_type_list | Space-separated list of obfuscation types: **blurring**, **masking** or **pixelation** | Yes      |
+| --image_base64_file     | Path to the base64-encoded image file                                                  | Yes      |
+| --square                | Optional: size of the square for pixelation effect                                     | No       |
+| --sigma                 | Optional: sigma value for blurring effect                                              | No       |
 
 #### Docker Example
-
-You can also use Docker to run the CLI:
 
 ```bash
 docker run -it safear --model_number 0 \
@@ -176,7 +174,8 @@ docker run -it safear --model_number 0 \
                       --image_base64_file test_samples/images/img_640x640_base64.txt
 ```
 
-*Note*: The Docker command is just an example and may need to be modified to fit your specific use case.
+*Note*: <small> The Docker command is just an example and may need to be modified to fit your specific use
+case. </small>
 
 ### Python Module usage
 
@@ -190,7 +189,7 @@ from safear_service import SafeARService
 safe_ar_service = SafeARService()
 
 # Configure the SafeARService with the desired model number and obfuscation policies
-safe_ar_service.configure(model_number=0, obfuscation_policies={0: "blurring", 1: "blurring"})
+safe_ar_service.configure(model_number=0, obfuscation_policies={0: "blurring", 1: "masking"})
 
 # Auxiliary function to read the base64 image from a file
 image_base64 = safe_ar_service.read_base64_image("test_samples/images/img_640x640_base64.txt")
