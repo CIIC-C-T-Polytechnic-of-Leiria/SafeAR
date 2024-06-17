@@ -182,7 +182,7 @@ case. </small>
 You can also use the `SafeARService` class directly in your Python scripts for more flexibility and customization.
 Here's an example usage:
 
-```python
+```
 from safear_service import SafeARService
 
 # Initialize the SafeARService

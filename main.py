@@ -11,7 +11,7 @@
         --model_number 0 \
         --class_id_list 0 1 \
         --obfuscation_type_list "pixelation" "blurring" \
-        --image_base64_file "inputs/img_in.txt" \
+        --image_base64_file "test_samples/images/img_640x640_base64.txt" \
         --square 10 \
         --sigma 5
 """
@@ -117,9 +117,10 @@ if __name__ == "__main__":
 
     # safeAR_image_base64 = base64.b64encode(safeAR_frame_bytes).decode("utf-8")
 
-    # # DEBUG: save the processed frame
-    # import cupy as cp
-    # import imageio
-    # safeAR_frame_array = cp.frombuffer(safeAR_frame_bytes, dtype=cp.uint8)
-    # safeAR_frame_array = safeAR_frame_array.reshape((640, 640, 3))
-    # imageio.imwrite("outputs/img_out2.png", safeAR_frame_array.get())
+    #  DEBUG: save the processed frame
+    import cupy as cp
+    import imageio
+
+    safeAR_frame_array = cp.frombuffer(safeAR_frame_bytes, dtype=cp.uint8)
+    safeAR_frame_array = safeAR_frame_array.reshape((640, 640, 3))
+    imageio.imwrite("outputs/OUTPUT.png", safeAR_frame_array.get())
