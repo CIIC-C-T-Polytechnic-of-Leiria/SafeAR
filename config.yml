@@ -19,5 +19,5 @@ models:
 
 obfuscation_types: [ "pixelation", "blurring", "masking", "none" ]
 
-sigma: 0.5
+sigma: 5
 square: 10

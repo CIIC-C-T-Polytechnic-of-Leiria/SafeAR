@@ -3,6 +3,7 @@ from time import time
 from typing import Tuple
 
 import cupy as cp
+
 # Debugging
 import onnxruntime as ort
 from cucim.skimage import transform
@@ -346,64 +347,63 @@ class Yolov8seg:
 
         return img
 
+    # @staticmethod
+    # def draw_bbox(
+    #     img: cp.ndarray,
+    #     bbox: cp.ndarray,
+    #     class_name: str,
+    #     policy: str,
+    #     score: float,
+    #     color: Tuple[int, int, int],
+    #     thickness=1,
+    #     font_scale=0.8,
+    #     padding: cp.ndarray = None,
+    # ):
+    #     # Convert the CuPy array to a PIL Image
+    #     img_pil = Image.fromarray(cp.asnumpy(img))
+    #
+    #     # Create an ImageDraw object
+    #     draw = ImageDraw.Draw(img_pil)
+    #
+    #     # Define the font (replace 'arial.ttf' with the path to your desired font file)
+    #     font_path = "arial.ttf"
+    #     font_size = int(font_scale * 16)
+    #     font = ImageFont.truetype(font_path, font_size)
+    #
+    #     # Reverse padding and aspect ratio
+    #     if padding is not None:
+    #         bbox += padding
+    #
+    #     bbox = bbox.astype(int)
+    #
+    #     x1, y1, x2, y2 = bbox
+    #
+    #     # Draw the bounding box rectangle (using CuPy-based implementation)
+    #     custom_draw_rectangle(img, bbox, color, thickness)
+    #
+    #     # Draw the text using Pillow's ImageDraw
+    #     text = f"{policy} | {class_name} : {score:.2f}"
+    #     text_width, text_height = draw.textsize(text, font=font)
+    #     draw.text(
+    #         (x1 + 2, y1 + 11),
+    #         text,
+    #         fill=color,
+    #         font=font,
+    #     )
+    #
+    #     # Convert the PIL Image back to a CuPy array
+    #     img_cupy = cp.asarray(img_pil)
 
-#     @staticmethod
-#     def draw_bbox(
-#         img: cp.ndarray,
-#         bbox: cp.ndarray,
-#         class_name: str,
-#         policy: str,
-#         score: float,
-#         color: Tuple[int, int, int],
-#         thickness=1,
-#         font_scale=0.8,
-#         padding: cp.ndarray = None,
-#     ):
-#         # Convert the CuPy array to a PIL Image
-#         img_pil = Image.fromarray(cp.asnumpy(img))
-#
-#         # Create an ImageDraw object
-#         draw = ImageDraw.Draw(img_pil)
-#
-#         # Define the font (replace 'arial.ttf' with the path to your desired font file)
-#         font_path = "arial.ttf"
-#         font_size = int(font_scale * 16)
-#         font = ImageFont.truetype(font_path, font_size)
-#
-#         # Reverse padding and aspect ratio
-#         if padding is not None:
-#             bbox += padding
-#
-#         bbox = bbox.astype(int)
-#
-#         x1, y1, x2, y2 = bbox
-#
-#         # Draw the bounding box rectangle (using CuPy-based implementation)
-#         custom_draw_rectangle(img, bbox, color, thickness)
-#
-#         # Draw the text using Pillow's ImageDraw
-#         text = f"{policy} | {class_name} : {score:.2f}"
-#         text_width, text_height = draw.textsize(text, font=font)
-#         draw.text(
-#             (x1 + 2, y1 + 11),
-#             text,
-#             fill=color,
-#             font=font,
-#         )
-#
-#         # Convert the PIL Image back to a CuPy array
-#         img_cupy = cp.asarray(img_pil)
-#
-#
-# def custom_draw_rectangle(
-#     img: cp.ndarray, bbox: cp.ndarray, color: Tuple[int, int, int], thickness: int
-# ):
-#     x1, y1, x2, y2 = bbox
-#     img[y1 : y1 + thickness, x1:x2] = color
-#     img[y2 : y2 + thickness, x1:x2] = color
-#     img[y1:y2, x1 : x1 + thickness] = color
-#     img[y1:y2, x2 : x2 + thickness] = color
-#     return img
+
+def custom_draw_rectangle(
+    img: cp.ndarray, bbox: cp.ndarray, color: Tuple[int, int, int], thickness: int
+):
+    x1, y1, x2, y2 = bbox
+    img[y1 : y1 + thickness, x1:x2] = color
+    img[y2 : y2 + thickness, x1:x2] = color
+    img[y1:y2, x1 : x1 + thickness] = color
+    img[y1:y2, x2 : x2 + thickness] = color
+    return img
 
 
 def iou(box1: cp.ndarray, box2: cp.ndarray) -> cp.ndarray:
