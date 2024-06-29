@@ -225,6 +225,7 @@ if __name__ == "__main__":
     parser.add_argument("--ip", default="172.22.21.43", help="IP address of the server")
     parser.add_argument("--port", type=int, default=8081, help="Server port")
     parser.add_argument("--image_file", required=True, help="Image file path to process")
+    parser.add_argument("--log_file", help="File path to store the latest POST request contents")
 
     args = parser.parse_args()
     main(args)
