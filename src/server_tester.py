@@ -6,7 +6,7 @@ Author: Tiago F. R. Ribeiro
 Last Modified: 2024-06-29
 
 TODO:
- - Check why we are getting Error: 400 Client Error: BAD REQUEST for url: http://172.22.21.43:8081/video
+ - Check why we are not being able to receive the image from the server properly
  - Test image and metrics display
 """
 import argparse
@@ -24,7 +24,6 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from PIL import Image
 import io
-import numpy as np
 
 latencies: List[float] = []
 processed_frames: int = 0
@@ -60,6 +59,13 @@ def clear_console():
 
 
 def update_metrics(url: str, port: int, image_file: str):
+    """
+    Updates the performance metrics on the console.
+    Args:
+        url: str: URL of the server
+        port: int: Server port
+        image_file: str: Path to the image file
+    """
     global processed_frames, failed_requests, latencies, start_time
     image_base_name = os.path.basename(image_file)
 
@@ -99,7 +105,19 @@ def update_metrics(url: str, port: int, image_file: str):
         exit_event.wait(1)  # Update metrics every second
 
 
-def send_request(url: str, image_path: str, timeout: int = 1000) -> tuple:
+def send_request(url: str, image_path: str, log_file: str = None, timeout: int = 1000) -> tuple:
+    """
+    Send a POST request to the server with the image data.
+
+    Args:
+        url: URL of the server
+        image_path: Path to the image file
+        log_file: File path to store the latest POST request contents
+        timeout: Maximum time to wait for the server response
+
+    Returns:
+        tuple: Latency and response content
+    """
     global processed_frames, failed_requests
 
     # Verify if the image file is a JPEG or PNG file
@@ -112,25 +130,24 @@ def send_request(url: str, image_path: str, timeout: int = 1000) -> tuple:
 
     start_time: float = time.time()
     try:
-        files = {'imageData': img_base64}
-        # Create a file to log the image data sent and save it to the current directory
-        with open('src/debug/files_data.txt', 'w') as f:
-            f.write(str(files))
+        # Prepare the data for x-www-form-urlencoded format
+        data = {'imageData': img_base64}
 
-        # print(f"url: {url}")
+        # Log the request contents if log_file is provided
+        if log_file:
+            with open(log_file, 'w') as f:
+                f.write(f"URL: {url}\n")
+                f.write(f"Method: POST\n")
+                f.write(f"Header: Content-Type: application/x-www-form-urlencoded\n")
+                f.write(f"Body Parameter: imageData={img_base64[:50]}...\n")
+
         response = requests.post(
             url,
-            files=files,
-            headers={"Content-Type": "multipart/form-data"}
+            data=data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=timeout
         )
 
-        # response = requests.post(
-        #     url,
-        #     files=files,
-        #     headers={"Content-Type": "multipart/form-data"},
-        #     timeout=timeout
-        # )
-        # print(f"files: {files}")
         response.raise_for_status()
         processed_frames += 1
         latency = time.time() - start_time
@@ -142,14 +159,21 @@ def send_request(url: str, image_path: str, timeout: int = 1000) -> tuple:
         return 0, None
 
 
-def process_image(url: str, image_path: str):
+def process_image(url: str, image_path: str, log_file: str = None):
+    """
+
+    Args:
+        url: URL of the server
+        image_path: Path to the image file
+        log_file: File path to store the latest POST request contents
+    """
     max_retries = 5
     while not exit_event.is_set():
         for attempt in range(max_retries):
             if exit_event.is_set():
                 return
             try:
-                latency, image_data = send_request(url, image_path)
+                latency, image_data = send_request(url, image_path, log_file)
                 if latency > 0:
                     display_image(image_data)
                     plot_latency(latencies)
@@ -165,6 +189,11 @@ def process_image(url: str, image_path: str):
 
 
 def main(args: argparse.Namespace):
+    """
+
+    Args:
+        args: argparse.Namespace: Command-line arguments
+    """
     base_url = f"http://{args.ip}:{args.port}"
     test_url = f"{base_url}/test"
     video_url = f"{base_url}/video"
@@ -186,7 +215,7 @@ def main(args: argparse.Namespace):
     metrics_thread.daemon = True
     metrics_thread.start()
 
-    processing_thread = threading.Thread(target=process_image, args=(video_url, args.image_file))
+    processing_thread = threading.Thread(target=process_image, args=(video_url, args.image_file, args.log_file))
     processing_thread.daemon = True
     processing_thread.start()
 
@@ -214,6 +243,7 @@ if __name__ == "__main__":
     parser.add_argument("--ip", default="172.22.21.43", help="IP address of the server")
     parser.add_argument("--port", type=int, default=8081, help="Server port")
     parser.add_argument("--image_file", required=True, help="Image file path to process")
+    parser.add_argument("--log_file", help="File path to store the latest POST request contents")
 
     args = parser.parse_args()
     main(args)
