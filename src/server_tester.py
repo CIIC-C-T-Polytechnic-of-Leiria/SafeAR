@@ -85,7 +85,7 @@ def update_metrics(url: str, port: int, image_file: str):
         print(f"│ Elapsed Time                  │ {str(timedelta(seconds=int(elapsed_time))):>24s} │")
         print("└───────────────────────────────┴──────────────────────────┘")
 
-        print("\n┌─────────────────────────────────────────────────────────┐")
+        print("┌─────────────────────────────────────────────────────────┐")
         print("│                    Error Messages                       │")
         print("└─────────────────────────────────────────────────────────┘")
         for msg in error_messages:
@@ -102,7 +102,7 @@ def update_metrics(url: str, port: int, image_file: str):
 def send_request(url: str, image_path: str, timeout: int = 1000) -> tuple:
     global processed_frames, failed_requests
 
-    # Verifica se a extensão do arquivo é .jpg ou .png
+    # Verify if the image file is a JPEG or PNG file
     if not image_path.lower().endswith(('.jpg', '.jpeg', '.png')):
         error_messages.append("Error: The image file must be a JPEG or PNG file.")
         return 0, None
