@@ -10,16 +10,14 @@
 
 ### Overview
 
-Welcome to SafeAR, a privacy-focused solution designed for augmented reality (AR) contexts. Our system processes input
-from mobile device cameras and returns a sanitized version of the data, ensuring that sensitive information is obscured.
+Welcome to SafeAR, a privacy-focused solution designed for augmented reality (AR) contexts. Our system processes input from mobile device cameras and returns a sanitized version of the data, ensuring that sensitive information is obscured.
 
-<p align="center"> <img src="assets/output.gif" width="650px" style="border:3px solid lightgray;" alt=""/> </p>
+<p align="center"> <img src="assets/output.gif" width="650px" style="border:1px solid lightgray;" alt=""/> </p>
 
-SafeAR Service receives images for obfuscation along with metadata specifying the classes to be obfuscated and the
-respective method. It returns sanitized images to the client.
+SafeAR Service receives images for obfuscation along with metadata specifying the classes to be obfuscated and the respective method. It returns sanitized images to the client.
 <br>
 
-<p align="center"> <img src="assets/safe_ar_overview.png" width="650px" style="border:2px solid lightgray;" alt=""/> </p>
+<p align="center"> <img src="assets/safe_ar_overview.png" width="650px" style="border:1px solid lightgray;" alt=""/> </p>
 
 
 Repository Structure
@@ -33,18 +31,22 @@ safeAR-aaS/
 ├── 🏛️ assets/                   # Logos and other visual assets
 ├── 🚰 src/                      # Source code
 ├── 📁 seg_models/               # Pre-trained instance segmentation models (onnx format)
+├── 🖼️ test_samples/             # Test images or samples
 ├── 🤷🏻‍♀️ .gitignore                # Git ignore file
 ├── 🛠️ config.yml                # Configuration file
-├── 🐍 main.py                   # Main script to run the API
-├── 📦 setup.py                  # Setup file for the API
-├── 📜 README.md                 # Readme file
 ├── 🐳 Dockerfile                # Dockerfile for containerization
-└── 📜 requirements.txt          # Required packages
+├── 📜 LICENSE                   # License file
+├── 🐍 main.py                   # Main script to run the API
+├── 📜 README.md                 # Readme file
+├── 📦 requirements.txt          # Required packages for the API
+├── 📦 requirements_client.txt   # Required packages for the client
+└── 📦 setup.py                  # Setup file for the API
 ```
 
 Installation
 ------------
-
+<details>
+<summary> Conda</summary>
 [**Conda**](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) Environment:
 
 ```bash
@@ -69,6 +71,11 @@ Check the [official documentation](https://onnxruntime.ai/docs/execution-provide
 ensure compatibility.
 </small>
 
+</details>
+
+<details>
+<summary> Docker</summary>
+
 [**Docker**](https://www.docker.com/get-started/) Image:
 
 Install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html),
@@ -77,6 +84,7 @@ if not already installed. In the project root directory, build the Docker image:
  ```bash
  docker build --rm -t safear:v1 .
  ```
+</details>
 
 Model Download and Conversion
 -----------------------------
@@ -143,10 +151,22 @@ LTS operating system </small>
 Usage
 --------
 
+#### SafeAR Service Parameters
+
+|  | Parameter | Description | 
+| :---: |:--- | :--- | 
+| ⚙️ |`model_number` | Object detection model index (0-based) |
+| 📝 |`class_id_list` | Class IDs to obfuscate (space-separated) | 
+| 🎨 |`obfuscation_type_list` | Obfuscation types: ☁️ blurring, 🕳️ masking, or ▩️ pixelation (space-separated) |
+| 📷 | `image_base64_file` | Path to base64-encoded image file | 
+| σ | `sigma` | Blurring effect sigma value (optional) |
+
+For a full list of class IDs, refer to [coco_class_list.txt](assets\coco_class_list.txt)
+
 ### Command-Line Interface
 
-The CLI provides a convenient way to obfuscate images using various obfuscation techniques.
-Here's an example command to get you started:
+Basic example:
+
 
 ```bash
 python main.py \
@@ -156,16 +176,8 @@ python main.py \
     --image_base64_file test_samples/images/img_640x640_base64.txt
 ```
 
-| Parameters              | Description                                                                            | Required |
-|-------------------------|----------------------------------------------------------------------------------------|----------|
-| --model_number          | Model number for object detection (0-based index)                                      | Yes      |
-| --class_id_list         | Space-separated [list of class IDs](assets/coco_class_list.txt) to obfuscate           | Yes      |
-| --obfuscation_type_list | Space-separated list of obfuscation types: **blurring**, **masking** or **pixelation** | Yes      |
-| --image_base64_file     | Path to the base64-encoded image file                                                  | Yes      |
-| --square                | Optional: size of the square for pixelation effect                                     | No       |
-| --sigma                 | Optional: sigma value for blurring effect                                              | No       |
 
-#### Docker Example
+### Docker Usage
 
 ```bash
 docker run -it safear --model_number 0 \
@@ -174,43 +186,43 @@ docker run -it safear --model_number 0 \
                       --image_base64_file test_samples/images/img_640x640_base64.txt
 ```
 
-*Note*: <small> The Docker command is just an example and may need to be modified to fit your specific use
-case. </small>
+*Note*: <small> Modify the Docker command as needed for your specific use case.. </small>
 
-### Python Module usage
+### Python Module Usage
 
 You can also use the `SafeARService` class directly in your Python scripts for more flexibility and customization.
 Here's an example usage:
 
-```
+```python 
 from safear_service import SafeARService
 
-# Initialize the SafeARService
+# 🚀 Initialize the SafeARService instance
 safe_ar_service = SafeARService()
 
-# Configure the SafeARService with the desired model number and obfuscation policies
+# ⚙️ Configure the SafeARService with the desired model number and obfuscation policies
 safe_ar_service.configure(model_number=0, obfuscation_policies={0: "blurring", 1: "masking"})
 
-# Auxiliary function to read the base64 image from a file
+# Auxiliary functions (for testing only)
 image_base64 = safe_ar_service.read_base64_image("test_samples/images/img_640x640_base64.txt")
 
-# Image Obfuscation using the SafeARService
+# 🛡️ Core: Image Obfuscation
 processed_frame_bytes = safe_ar_service.process_frame(image_base64)
 
-# Auxiliary function to save the processed frame to a file
+# Auxiliary function (for testing only)
 safe_ar_service.save_processed_frame(processed_frame_bytes, "outputs/img_out.png")
 ```
 
-To-Do
+TODOs
 -----
 
-Here are the main tasks we plan to tackle in the near future:
+Here are the main tasks we need to complete:
 
-- **Model selection**: Enable users to choose from multiple pre-trained models.
-- **Metadata anonymization**: Implement metadata anonymization for enhanced privacy.
-- **Sensor data utilization**: Leverage mobile device sensor data to boost performance.
-- **Inpainting obfuscation**: Add inpainting as an obfuscation technique.
-- **Package distribution**: Publish SafeAR as a PyPI package for easier installation.
+- [ ] Update all documentation to reflect the latest changes and features
+- [ ] Implement model selection feature pipeline
+- [ ] Develop metadata anonymization functionality
+- [ ] Integrate mobile device sensor data utilization
+- [ ] Add inpainting as an obfuscation technique options
+- [ ] Prepare SafeAR for distribution as a PyPI package
 
 Acknowledgements
 ----------------

@@ -8,6 +8,7 @@ Last Modified: 2024-06-29
 TODO:
  - Check why we are not able to receive the image from the server properly
  - Test image and metrics display
+ - Update client_requirements.txt
 """
 import argparse
 import base64
