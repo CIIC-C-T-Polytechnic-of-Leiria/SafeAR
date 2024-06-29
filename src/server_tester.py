@@ -1,176 +1,221 @@
+"""
+server_tester.py
+
+Description: This script sends an image to a remote server and displays the returned image and latency.
+Author: Tiago F. R. Ribeiro
+Last Modified: 2024-06-29
+
+TODO:
+ - Check why we are getting Error: 400 Client Error: BAD REQUEST for url: http://172.22.21.43:8081/video
+ - Test image and metrics display
+"""
 import argparse
 import base64
-import os
-import threading
 import time
-from typing import List
-
-import matplotlib.pyplot as plt
+from typing import List, Deque
+from collections import deque
+import random
+import threading
+import sys
 import requests
-from colorama import Fore, Back, Style, init
+from requests.exceptions import RequestException
+import os
+from datetime import timedelta
+import matplotlib.pyplot as plt
+from PIL import Image
+import io
+import numpy as np
 
-# Initialize colorama
-init(autoreset=True)
-
-# Global variables for metrics
 latencies: List[float] = []
 processed_frames: int = 0
+failed_requests: int = 0
 start_time: float = time.time()
+running: bool = True
+error_messages: Deque[str] = deque(maxlen=2)
+exit_event = threading.Event()
 
 
-def print_colorful_usage():
-    """
-    Print a colorful usage guide for the script.
-    """
-    print(f"{Fore.CYAN}{Style.BRIGHT}==================================")
-    print(f"{Fore.YELLOW}Image Processing and Metrics Script")
-    print(f"{Fore.CYAN}{Style.BRIGHT}=================================={Style.RESET_ALL}")
-    print(f"\n{Fore.GREEN}This script processes images and displays metrics for server requests.")
-    print(f"\n{Fore.MAGENTA}Usage:")
-    print(f"  {Fore.WHITE}python script_name.py [options]")
-    print(f"\n{Fore.MAGENTA}Options:")
-    print(f"  {Fore.YELLOW}--ip IP{Fore.WHITE}        Server IP address (default: 172.22.21.43)")
-    print(f"  {Fore.YELLOW}--port PORT{Fore.WHITE}    Server port (default: 8081)")
-    print(f"  {Fore.YELLOW}--image_folder PATH{Fore.WHITE}    Path to the folder containing images")
-    print(f"  {Fore.YELLOW}--fps FPS{Fore.WHITE}      Frames per second to simulate (default: 30)")
-    print(f"\n{Fore.MAGENTA}Example:")
-    print(f"  {Fore.WHITE}python script_name.py --ip 192.168.1.100 --port 8080 --image_folder /path/to/images --fps 25")
-    print(f"\n{Fore.CYAN}{Style.BRIGHT}=================================={Style.RESET_ALL}")
-    print(f"\n")
+def display_image(image_data: bytes):
+    img = Image.open(io.BytesIO(image_data))
+    plt.figure(figsize=(8, 6))
+    plt.imshow(img)
+    plt.axis('off')
+    plt.title("Returned Image")
+    plt.show(block=False)
+    plt.pause(0.1)
 
 
-def send_request(url: str, image_path: str) -> float:
-    """
-    Send a request to the server with the encoded image.
-
-    Args:
-        url (str): The URL of the server.
-        image_path (str): The path to the image file.
-
-    Returns:
-        float: The latency of the request.
-    """
-    global processed_frames
-
-    # Load and encode the image
-    with open(image_path, "rb") as image_file:
-        img_base64 = base64.b64encode(image_file.read()).decode("utf-8")
-
-    # Send request to the server
-    start_time = time.time()
-    response = requests.post(
-        url,
-        headers={"Content-Type": "multipart/form-data"},
-        data={"imageData": img_base64},
-    )
-    end_time = time.time()
-
-    # Calculate and store latency
-    latency = end_time - start_time
-    latencies.append(latency)
-
-    # Process response
-    if response.status_code == 200:
-        processed_frames += 1
-        print(f"Frame {processed_frames} processed successfully.")
-    else:
-        print(f"Error processing frame: {response.status_code}")
-
-    return latency
+def plot_latency(latencies: List[float]):
+    plt.figure(figsize=(10, 4))
+    plt.plot(latencies)
+    plt.title("Latency over time")
+    plt.xlabel("Request number")
+    plt.ylabel("Latency (seconds)")
+    plt.show(block=False)
+    plt.pause(0.1)
 
 
-def process_images(url: str, image_folder: str, frame_delay: float):
-    """
-    Process images from the specified folder.
-
-    Args:
-        url (str): The URL of the server.
-        image_folder (str): The path to the folder containing images.
-        frame_delay (float): The delay between processing frames.
-    """
-    image_files = [
-        f for f in os.listdir(image_folder) if f.lower().endswith((".png", ".jpg", ".jpeg"))
-    ]
-
-    for image_file in image_files:
-        image_path = os.path.join(image_folder, image_file)
-        latency = send_request(url, image_path)
-        print(f"Image: {image_file}, Latency: {latency:.4f} seconds")
-        time.sleep(frame_delay)
+def clear_console():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def show_metrics():
-    """
-    Continuously display current metrics.
-    """
-    while True:
-        time.sleep(5)  # Update every 5 seconds
+def update_metrics(url: str, port: int, image_file: str):
+    global processed_frames, failed_requests, latencies, start_time
+    image_base_name = os.path.basename(image_file)
+
+    while not exit_event.is_set():
         current_time = time.time()
         elapsed_time = current_time - start_time
         fps = processed_frames / elapsed_time if elapsed_time > 0 else 0
         avg_latency = sum(latencies) / len(latencies) if latencies else 0
+        total_requests = processed_frames + failed_requests
 
-        print(f"\nCurrent metrics:")
-        print(f"FPS: {fps:.2f}")
-        print(f"Average latency: {avg_latency:.4f} seconds")
-        print(f"Processed frames: {processed_frames}")
-        print("------------------------")
+        clear_console()
+        print("\n┌──────────────────────────────────────────────────────────┐")
+        print("│                    Performance Metrics                   │")
+        print("├───────────────────────────────┬──────────────────────────┤")
+        print(f"│ Server URL                    │ {url}:{port:<11} │")
+        print(f"│ Image File                    │ {image_base_name:<24} │")
+        print("├───────────────────────────────┼──────────────────────────┤")
+        print(f"│ Frames Per Second             │ {fps:24.2f} │")
+        print(f"│ Average Latency               │ {avg_latency * 1000:21.2f} ms │")
+        print(f"│ Processed Frames              │ {processed_frames:24d} │")
+        print(f"│ Failed Requests               │ {failed_requests:24d} │")
+        print(f"│ Total Requests                │ {total_requests:24d} │")
+        print(f"│ Elapsed Time                  │ {str(timedelta(seconds=int(elapsed_time))):>24s} │")
+        print("└───────────────────────────────┴──────────────────────────┘")
+
+        print("\n┌─────────────────────────────────────────────────────────┐")
+        print("│                    Error Messages                       │")
+        print("└─────────────────────────────────────────────────────────┘")
+        for msg in error_messages:
+            print(f"-  {msg:<53} ")
+        for _ in range(2 - len(error_messages)):
+            print("                                                         ")
+        print("└─────────────────────────────────────────────────────────┘")
+
+        print("\nPress 'q' then Enter to quit.")
+
+        exit_event.wait(1)  # Update metrics every second
 
 
-def plot_latency():
-    """
-    Plot the latency over time.
-    """
-    plt.ion()
-    fig, ax = plt.subplots()
-    line, = ax.plot(latencies)
-    ax.set_xlabel("Frames")
-    ax.set_ylabel("Latency (s)")
-    ax.set_title("Latency over time")
+def send_request(url: str, image_path: str, timeout: int = 1000) -> tuple:
+    global processed_frames, failed_requests
 
-    while True:
-        line.set_ydata(latencies)
-        ax.relim()
-        ax.autoscale_view()
-        fig.canvas.draw()
-        fig.canvas.flush_events()
-        time.sleep(1)
+    # Verifica se a extensão do arquivo é .jpg ou .png
+    if not image_path.lower().endswith(('.jpg', '.jpeg', '.png')):
+        error_messages.append("Error: The image file must be a JPEG or PNG file.")
+        return 0, None
+
+    with open(image_path, "rb") as image_file:
+        img_base64 = base64.b64encode(image_file.read()).decode("utf-8")
+
+    start_time: float = time.time()
+    try:
+        files = {'imageData': img_base64}
+        # Create a file to log the image data sent and save it to the current directory
+        with open('src/debug/files_data.txt', 'w') as f:
+            f.write(str(files))
+
+        # print(f"url: {url}")
+        response = requests.post(
+            url,
+            files=files,
+            headers={"Content-Type": "multipart/form-data"}
+        )
+
+        # response = requests.post(
+        #     url,
+        #     files=files,
+        #     headers={"Content-Type": "multipart/form-data"},
+        #     timeout=timeout
+        # )
+        # print(f"files: {files}")
+        response.raise_for_status()
+        processed_frames += 1
+        latency = time.time() - start_time
+        latencies.append(latency)
+        return latency, response.content
+    except RequestException as e:
+        failed_requests += 1
+        error_messages.append(f"Error: {str(e)}")
+        return 0, None
+
+
+def process_image(url: str, image_path: str):
+    max_retries = 5
+    while not exit_event.is_set():
+        for attempt in range(max_retries):
+            if exit_event.is_set():
+                return
+            try:
+                latency, image_data = send_request(url, image_path)
+                if latency > 0:
+                    display_image(image_data)
+                    plot_latency(latencies)
+                    break
+            except Exception as e:
+                error_messages.append(f"Attempt {attempt + 1} failed: {str(e)}")
+                if attempt < max_retries - 1 and not exit_event.is_set():
+                    wait_time = (2 ** attempt) + (random.randint(0, 1000) / 1000)
+                    exit_event.wait(wait_time)
+                else:
+                    error_messages.append("Max retries reached or stopping. Moving to next iteration.")
+                    break
 
 
 def main(args: argparse.Namespace):
-    """
-    Main function to run the image processing and metrics.
+    base_url = f"http://{args.ip}:{args.port}"
+    test_url = f"{base_url}/test"
+    video_url = f"{base_url}/video"
 
-    Args:
-        args (argparse.Namespace): Command-line arguments.
-    """
-    url = f"http://{args.ip}:{args.port}/video"
-    frame_delay = 1 / args.fps
+    print(f"Verifying if the service is running {test_url}")
+    try:
+        response = requests.get(test_url)
+        response.raise_for_status()
+        print("Server is running.")
+    except RequestException as e:
+        print(f"Error: {str(e)}")
+        sys.exit(1)
 
-    # Start threads
-    metrics_thread = threading.Thread(target=show_metrics)
-    plot_thread = threading.Thread(target=plot_latency)
+    print(f"Sending image to {video_url}")
 
+    plt.ion()  # Turn on interactive mode for matplotlib
+
+    metrics_thread = threading.Thread(target=update_metrics, args=(args.ip, args.port, args.image_file))
+    metrics_thread.daemon = True
     metrics_thread.start()
-    plot_thread.start()
 
-    # Start image processing
-    process_images(url, args.image_folder, frame_delay)
+    processing_thread = threading.Thread(target=process_image, args=(video_url, args.image_file))
+    processing_thread.daemon = True
+    processing_thread.start()
 
-    # Wait for threads to finish (which in this case will never happen)
-    metrics_thread.join()
-    plot_thread.join()
+    try:
+        while not exit_event.is_set():
+            if input().lower() == 'q':
+                print("Stopping threads and exiting...")
+                exit_event.set()
+                break
+    except KeyboardInterrupt:
+        print("\nInterrupted by user. Stopping threads and exiting...")
+        exit_event.set()
+
+    # Wait for threads to finish
+    metrics_thread.join(timeout=2)
+    processing_thread.join(timeout=2)
+
+    print("Client service stopped.")
+    plt.close('all')  # Close all matplotlib windows
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    print_colorful_usage()
-    print(f"{Fore.WHITE}For more details, use the -h or --help option.\n")
-
-    parser = argparse.ArgumentParser(description="Process images and display metrics.")
-    parser.add_argument("--ip", default="172.22.21.43", help="Server IP address")
+    parser = argparse.ArgumentParser(description="Processes an image using a remote server.")
+    parser.add_argument("--ip", default="172.22.21.43", help="IP address of the server")
     parser.add_argument("--port", type=int, default=8081, help="Server port")
-    parser.add_argument("--image_folder", required=True, help="Path to the folder containing images")
-    parser.add_argument("--fps", type=float, default=30, help="Frames per second to simulate")
+    parser.add_argument("--image_file", required=True, help="Image file path to process")
 
     args = parser.parse_args()
     main(args)
+
+# 172.22.21.43:8081/video POST

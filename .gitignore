@@ -56,3 +56,6 @@ backup_cv2.zip
 /Packages
 /UserSettings
 
+# Debug only files
+src/debug
+
