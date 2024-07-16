@@ -22,7 +22,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
 import argparse
 import importlib
-import os
 
 import src.seg_yolov8
 from src.safear_service import SafeARService
