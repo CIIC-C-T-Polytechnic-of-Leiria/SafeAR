@@ -10,7 +10,6 @@ import yaml
 from src.obfuscator import ImageObfuscator
 from src.seg_yolov8 import Yolov8seg
 
-
 # # Reload the modules
 # importlib.reload(seg_yolov8)
 # importlib.reload(obfuscator)
