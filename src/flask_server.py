@@ -23,12 +23,18 @@ Note:
     - kill the server: curl -X POST http://localhost:5000/shutdown or CTRL+C
 """
 
+import sys
+import os
+
+# Add the project directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import base64
 import logging
 
 from flask import Flask, request, render_template, send_from_directory, jsonify
 
-from safear_service import SafeARService
+from src.safear_service import SafeARService
 
 # Initialize the Flask app
 app = Flask(__name__)
